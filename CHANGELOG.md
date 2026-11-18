@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.1.4 - villagers do not build
+
+### Fixed
+
+- **Villagers no longer talk about building or repairing things.** The model used to invent
+  construction work — "we should strengthen the walls", "I need to finish my roof" — which villagers
+  in Minecraft never do. Every language pack now states plainly that houses, walls, bridges and roads
+  are made by the player, not by the villager.
+
+  The rule is phrased as a statement of the villager's role rather than as a ban. A prompt that says
+  "never mention building" makes the model mention building more often, because the word itself puts
+  the subject in context. Saying what the villager does not do, and who does it instead, avoids that.
+
+- A test now fails if any language pack is missing the rule, so a future translation cannot drop it
+  silently.
+
 ## 1.1.3 - the languages players actually use
 
 ### Added
