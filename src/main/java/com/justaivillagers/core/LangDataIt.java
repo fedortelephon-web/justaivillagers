@@ -124,7 +124,25 @@ final class LangDataIt {
                 List.of("il tempo", "il tuo lavoro", "il cibo", "un vicino che non ti piace", "la notte",
                         "i tuoi attrezzi", "un rumore strano", "i tuoi progetti", "la stanchezza", "la strada"),
                 List.of("mattina", "giorno", "sera", "tramonto", "notte", "alba"),
-                List.of("sereno", "pioggia", "temporale")
+                List.of("sereno", "pioggia", "temporale"),
+                                Map.ofEntries(
+                        Map.entry("farmer", "Il tuo mestiere. Lavori con queste cose: grano, pane, carota, patata, barbabietola, zucca, zappa e compostiera."),
+                        Map.entry("librarian", "Il tuo mestiere. Lavori con queste cose: libro, libreria, carta, libro e piuma, sacca d'inchiostro e lanterna."),
+                        Map.entry("cleric", "Il tuo mestiere. Lavori con queste cose: redstone, lapislazzuli, pietra luminosa, perla dell'End, ampolle incantate, carne marcia e alambicco."),
+                        Map.entry("armorer", "Il tuo mestiere. Lavori con queste cose: lingotto di ferro, carbone, secchio di lava, elmo di ferro, corazza di ferro, cotta di maglia, scudo e campana."),
+                        Map.entry("weaponsmith", "Il tuo mestiere. Lavori con queste cose: lingotto di ferro, carbone, selce, spada di ferro, ascia di ferro e mola."),
+                        Map.entry("toolsmith", "Il tuo mestiere. Lavori con queste cose: lingotto di ferro, carbone, selce, piccone di ferro, pala di ferro, zappa di ferro e campana."),
+                        Map.entry("butcher", "Il tuo mestiere. Lavori con queste cose: carne di maiale cruda, manzo crudo, carne di pecora cruda, pollo crudo, carne di maiale cotta e bistecca."),
+                        Map.entry("fisherman", "Il tuo mestiere. Lavori con queste cose: merluzzo crudo, salmone crudo, pesce tropicale, canna da pesca, secchio e falò."),
+                        Map.entry("fletcher", "Il tuo mestiere. Lavori con queste cose: bastone, selce, filo, piuma, arco, balestra e freccia."),
+                        Map.entry("leatherworker", "Il tuo mestiere. Lavori con queste cose: cuoio, sella, berretto di cuoio, tunica di cuoio, stivali di cuoio e pelle di coniglio."),
+                        Map.entry("shepherd", "Il tuo mestiere. Lavori con queste cose: lana, cesoie, tappeto, letto, quadro e tintura."),
+                        Map.entry("mason", "Il tuo mestiere. Lavori con queste cose: mattoni di pietra, palla d'argilla, mattone, terracotta, quarzo, pietra levigata e andesite."),
+                        Map.entry("cartographer", "Il tuo mestiere. Lavori con queste cose: carta, bussola, mappa, mappa vuota, stendardo, cornice e vetro."),
+                        Map.entry("nitwit", "Non hai un mestiere. Sei il pigro del villaggio: parli di cibo, di sonno e di pettegolezzi, e guardi gli altri lavorare."),
+                        Map.entry("child", "Sei un bambino e non hai un mestiere. Parli di giochi, di cibo e di tuo padre."),
+                        Map.entry("villager", "Non hai ancora un mestiere. Parli di cibo, del villaggio e di ciò che ti piacerebbe fare.")
+                )
         );
     }
 }

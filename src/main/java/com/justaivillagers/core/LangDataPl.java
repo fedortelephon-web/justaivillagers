@@ -124,7 +124,25 @@ final class LangDataPl {
                 List.of("pogoda", "twoja praca", "jedzenie", "sąsiad, którego nie lubisz", "noc",
                         "twoje narzędzia", "dziwny dźwięk", "twoje plany", "zmęczenie", "droga"),
                 List.of("rano", "dzień", "wieczór", "zachód słońca", "noc", "świt"),
-                List.of("bezchmurnie", "deszcz", "burza")
+                List.of("bezchmurnie", "deszcz", "burza"),
+                                Map.ofEntries(
+                        Map.entry("farmer", "Twój zawód. Pracujesz z tymi rzeczami: pszenica, chleb, marchewka, ziemniak, burak, dynia, motyka i kompostownik."),
+                        Map.entry("librarian", "Twój zawód. Pracujesz z tymi rzeczami: książka, biblioteczka, papier, księga z piórem, torebka z atramentem i latarnia."),
+                        Map.entry("cleric", "Twój zawód. Pracujesz z tymi rzeczami: redstone, lapis lazuli, blaskowiec, perła endermana, buteleczka zaklęć, zgniłe mięso i statyw alchemiczny."),
+                        Map.entry("armorer", "Twój zawód. Pracujesz z tymi rzeczami: sztabka żelaza, węgiel, wiadro lawy, żelazny hełm, żelazny napierśnik, kolczuga, tarcza i dzwon."),
+                        Map.entry("weaponsmith", "Twój zawód. Pracujesz z tymi rzeczami: sztabka żelaza, węgiel, krzemień, żelazny miecz, żelazny topór i kamień szlifierski."),
+                        Map.entry("toolsmith", "Twój zawód. Pracujesz z tymi rzeczami: sztabka żelaza, węgiel, krzemień, żelazny kilof, żelazna łopata, żelazna motyka i dzwon."),
+                        Map.entry("butcher", "Twój zawód. Pracujesz z tymi rzeczami: surowa wieprzowina, surowa wołowina, surowa baranina, surowy kurczak, pieczona wieprzowina i stek."),
+                        Map.entry("fisherman", "Twój zawód. Pracujesz z tymi rzeczami: surowy dorsz, surowy łosoś, ryba tropikalna, wędka, wiadro i ognisko."),
+                        Map.entry("fletcher", "Twój zawód. Pracujesz z tymi rzeczami: patyk, krzemień, sznurek, pióro, łuk, kusza i strzała."),
+                        Map.entry("leatherworker", "Twój zawód. Pracujesz z tymi rzeczami: skóra, siodło, skórzana czapka, skórzana tunika, skórzane buty i królicza skóra."),
+                        Map.entry("shepherd", "Twój zawód. Pracujesz z tymi rzeczami: wełna, nożyce, dywan, łóżko, obraz i barwnik."),
+                        Map.entry("mason", "Twój zawód. Pracujesz z tymi rzeczami: cegły kamienne, kulka gliny, cegła, terakota, kwarc, polerowany kamień i andezyt."),
+                        Map.entry("cartographer", "Twój zawód. Pracujesz z tymi rzeczami: papier, kompas, mapa, pusta mapa, baner, ramka i szyba."),
+                        Map.entry("nitwit", "Nie masz zawodu. Jesteś wioskowym leniem: mówisz o jedzeniu, spaniu i plotkach, a inni pracują."),
+                        Map.entry("child", "Jesteś dzieckiem i nie masz zawodu. Mówisz o zabawie, jedzeniu i o ojcu."),
+                        Map.entry("villager", "Nie masz jeszcze zawodu. Mówisz o jedzeniu, wiosce i o tym, czym chciałbyś się zająć.")
+                )
         );
     }
 }

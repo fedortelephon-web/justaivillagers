@@ -1,5 +1,26 @@
 # Changelog
 
+## 1.1.5 - villagers know their trade
+
+### Added
+
+- **A trade block for every profession, in all nine languages.** Each villager is now told what its
+  trade actually handles: a leatherworker gets leather, a saddle, leather armour and rabbit hide; a
+  mason gets stone bricks, clay, terracotta and quartz. Villagers with no trade — the layabout, the
+  child, the unemployed villager — get their own block instead of an empty one.
+
+  This closes the "crocodile leather" problem properly. The prompt used to say only "mention things
+  that fit your trade", which leaves the model to guess what fits, and the guess is exactly where
+  invented materials came from. Listing the real items removes the need to invent.
+
+- The block reaches every kind of line: direct answers, spontaneous mutters, reactions and the
+  evening two-villager conversations.
+
+### Fixed
+
+- Two tests guard the data: one fails if any profession in any language has no trade block, another
+  fails if the block is present in the pack but never makes it into the prompt.
+
 ## 1.1.4 - villagers do not build
 
 ### Fixed

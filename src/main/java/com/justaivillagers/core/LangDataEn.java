@@ -131,7 +131,25 @@ final class LangDataEn {
                 List.of("the weather", "your work", "food", "a villager you dislike", "the night",
                         "your tools", "a strange sound", "your plans", "tiredness", "the road"),
                 List.of("morning", "day", "evening", "sunset", "night", "dawn"),
-                List.of("clear", "rain", "thunderstorm")
+                List.of("clear", "rain", "thunderstorm"),
+                                Map.ofEntries(
+                        Map.entry("farmer", "Your trade. You work with these things: wheat, bread, carrot, potato, beetroot, pumpkin, hoe and composter."),
+                        Map.entry("librarian", "Your trade. You work with these things: book, bookshelf, paper, book and quill, ink sac and lantern."),
+                        Map.entry("cleric", "Your trade. You work with these things: redstone, lapis lazuli, glowstone, ender pearl, bottle o' enchanting, rotten flesh and brewing stand."),
+                        Map.entry("armorer", "Your trade. You work with these things: iron ingot, coal, lava bucket, iron helmet, iron chestplate, chainmail, shield and bell."),
+                        Map.entry("weaponsmith", "Your trade. You work with these things: iron ingot, coal, flint, iron sword, iron axe and grindstone."),
+                        Map.entry("toolsmith", "Your trade. You work with these things: iron ingot, coal, flint, iron pickaxe, iron shovel, iron hoe and bell."),
+                        Map.entry("butcher", "Your trade. You work with these things: raw porkchop, raw beef, raw mutton, raw chicken, cooked porkchop and steak."),
+                        Map.entry("fisherman", "Your trade. You work with these things: raw cod, raw salmon, tropical fish, fishing rod, bucket and campfire."),
+                        Map.entry("fletcher", "Your trade. You work with these things: stick, flint, string, feather, bow, crossbow and arrow."),
+                        Map.entry("leatherworker", "Your trade. You work with these things: leather, saddle, leather cap, leather tunic, leather boots and rabbit hide."),
+                        Map.entry("shepherd", "Your trade. You work with these things: wool, shears, carpet, bed, painting and dye."),
+                        Map.entry("mason", "Your trade. You work with these things: stone bricks, clay ball, brick, terracotta, quartz, polished stone and andesite."),
+                        Map.entry("cartographer", "Your trade. You work with these things: paper, compass, map, empty map, banner, item frame and glass pane."),
+                        Map.entry("nitwit", "You have no trade. You are the village layabout: you talk about food, sleep and gossip, and you watch others work."),
+                        Map.entry("child", "You are a child and have no trade. You talk about play, food and your father."),
+                        Map.entry("villager", "You have no trade yet. You talk about food, the village and what you would like to do.")
+                )
         );
     }
 }

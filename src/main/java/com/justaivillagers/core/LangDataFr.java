@@ -124,7 +124,25 @@ final class LangDataFr {
                 List.of("le temps", "ton travail", "la nourriture", "un voisin que tu n'aimes pas", "la nuit",
                         "tes outils", "un bruit étrange", "tes projets", "la fatigue", "le chemin"),
                 List.of("le matin", "le jour", "le soir", "le coucher du soleil", "la nuit", "l'aube"),
-                List.of("clair", "la pluie", "l'orage")
+                List.of("clair", "la pluie", "l'orage"),
+                                Map.ofEntries(
+                        Map.entry("farmer", "Ton métier. Tu travailles avec ces choses : blé, pain, carotte, pomme de terre, betterave, citrouille, houe et composteur."),
+                        Map.entry("librarian", "Ton métier. Tu travailles avec ces choses : livre, bibliothèque, papier, livre et plume, sac d'encre et lanterne."),
+                        Map.entry("cleric", "Ton métier. Tu travailles avec ces choses : redstone, lapis-lazuli, pierre lumineuse, perle de l'Ender, fiole d'expérience, chair putréfiée et alambic."),
+                        Map.entry("armorer", "Ton métier. Tu travailles avec ces choses : lingot de fer, charbon, seau de lave, casque en fer, plastron en fer, cotte de mailles, bouclier et cloche."),
+                        Map.entry("weaponsmith", "Ton métier. Tu travailles avec ces choses : lingot de fer, charbon, silex, épée en fer, hache en fer et meule."),
+                        Map.entry("toolsmith", "Ton métier. Tu travailles avec ces choses : lingot de fer, charbon, silex, pioche en fer, pelle en fer, houe en fer et cloche."),
+                        Map.entry("butcher", "Ton métier. Tu travailles avec ces choses : porc cru, bœuf cru, mouton cru, poulet cru, porc cuit et steak."),
+                        Map.entry("fisherman", "Ton métier. Tu travailles avec ces choses : morue crue, saumon cru, poisson tropical, canne à pêche, seau et feu de camp."),
+                        Map.entry("fletcher", "Ton métier. Tu travailles avec ces choses : bâton, silex, ficelle, plume, arc, arbalète et flèche."),
+                        Map.entry("leatherworker", "Ton métier. Tu travailles avec ces choses : cuir, selle, casquette en cuir, tunique en cuir, bottes en cuir et peau de lapin."),
+                        Map.entry("shepherd", "Ton métier. Tu travailles avec ces choses : laine, cisailles, tapis, lit, tableau et teinture."),
+                        Map.entry("mason", "Ton métier. Tu travailles avec ces choses : briques de pierre, boule d'argile, brique, terre cuite, quartz, pierre polie et andésite."),
+                        Map.entry("cartographer", "Ton métier. Tu travailles avec ces choses : papier, boussole, carte, carte vierge, bannière, cadre et vitre."),
+                        Map.entry("nitwit", "Tu n'as pas de métier. Tu es le fainéant du village : tu parles de nourriture, de sommeil et de ragots, et tu regardes les autres travailler."),
+                        Map.entry("child", "Tu es un enfant et tu n'as pas de métier. Tu parles de jeux, de nourriture et de ton père."),
+                        Map.entry("villager", "Tu n'as pas encore de métier. Tu parles de nourriture, du village et de ce que tu aimerais faire.")
+                )
         );
     }
 }

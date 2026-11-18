@@ -124,7 +124,25 @@ final class LangDataDe {
                 List.of("das Wetter", "deine Arbeit", "das Essen", "einen Nachbarn, den du nicht magst", "die Nacht",
                         "deine Werkzeuge", "ein seltsames Geräusch", "deine Pläne", "Müdigkeit", "den Weg"),
                 List.of("Morgen", "Tag", "Abend", "Sonnenuntergang", "Nacht", "Morgengrauen"),
-                List.of("klar", "Regen", "Gewitter")
+                List.of("klar", "Regen", "Gewitter"),
+                                Map.ofEntries(
+                        Map.entry("farmer", "Dein Beruf. Du arbeitest mit diesen Dingen: Weizen, Brot, Karotte, Kartoffel, Rote Bete, Kürbis, Hacke und Komposter."),
+                        Map.entry("librarian", "Dein Beruf. Du arbeitest mit diesen Dingen: Buch, Bücherregal, Papier, Buch und Feder, Tintenbeutel und Laterne."),
+                        Map.entry("cleric", "Dein Beruf. Du arbeitest mit diesen Dingen: Redstone, Lapislazuli, Leuchtstein, Enderperle, Erfahrungsfläschchen, verrottetes Fleisch und Braustand."),
+                        Map.entry("armorer", "Dein Beruf. Du arbeitest mit diesen Dingen: Eisenbarren, Kohle, Lavaeimer, Eishelm, Eisenharnisch, Kettenrüstung, Schild und Glocke."),
+                        Map.entry("weaponsmith", "Dein Beruf. Du arbeitest mit diesen Dingen: Eisenbarren, Kohle, Feuerstein, Eisenschwert, Eisenbeil und Schleifstein."),
+                        Map.entry("toolsmith", "Dein Beruf. Du arbeitest mit diesen Dingen: Eisenbarren, Kohle, Feuerstein, Eisenspitzhacke, Eisenschaufel, Eisenhacke und Glocke."),
+                        Map.entry("butcher", "Dein Beruf. Du arbeitest mit diesen Dingen: rohes Schweinefleisch, rohes Rindfleisch, rohes Hammelfleisch, rohes Hühnchen, gebratenes Schweinefleisch und Steak."),
+                        Map.entry("fisherman", "Dein Beruf. Du arbeitest mit diesen Dingen: roher Kabeljau, roher Lachs, Tropenfisch, Angelrute, Eimer und Lagerfeuer."),
+                        Map.entry("fletcher", "Dein Beruf. Du arbeitest mit diesen Dingen: Stock, Feuerstein, Faden, Feder, Bogen, Armbrust und Pfeil."),
+                        Map.entry("leatherworker", "Dein Beruf. Du arbeitest mit diesen Dingen: Leder, Sattel, Lederkappe, Lederwams, Lederstiefel und Hasenfell."),
+                        Map.entry("shepherd", "Dein Beruf. Du arbeitest mit diesen Dingen: Wolle, Schere, Teppich, Bett, Gemälde und Farbstoff."),
+                        Map.entry("mason", "Dein Beruf. Du arbeitest mit diesen Dingen: Steinziegel, Tonkugel, Ziegelstein, Terrakotta, Quarz, polierter Stein und Andesit."),
+                        Map.entry("cartographer", "Dein Beruf. Du arbeitest mit diesen Dingen: Papier, Kompass, Karte, leere Karte, Banner, Rahmen und Glasscheibe."),
+                        Map.entry("nitwit", "Du hast keinen Beruf. Du bist der Faulenzer des Dorfes: du redest über Essen, Schlaf und Klatsch, und siehst anderen bei der Arbeit zu."),
+                        Map.entry("child", "Du bist ein Kind und hast keinen Beruf. Du redest über Spielen, Essen und deinen Vater."),
+                        Map.entry("villager", "Du hast noch keinen Beruf. Du redest über Essen, das Dorf und darüber, was du gern tun würdest.")
+                )
         );
     }
 }
