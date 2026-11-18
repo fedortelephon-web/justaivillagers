@@ -124,7 +124,25 @@ final class LangDataEs {
                 List.of("el tiempo", "tu trabajo", "la comida", "un vecino que no te gusta", "la noche",
                         "tus herramientas", "un ruido extraño", "tus planes", "el cansancio", "el camino"),
                 List.of("la mañana", "el día", "la tarde", "el atardecer", "la noche", "el amanecer"),
-                List.of("despejado", "lluvia", "tormenta")
+                List.of("despejado", "lluvia", "tormenta"),
+                                Map.ofEntries(
+                        Map.entry("farmer", "Tu oficio. Trabajas con estas cosas: trigo, pan, zanahoria, patata, remolacha, calabaza, azada y compostador."),
+                        Map.entry("librarian", "Tu oficio. Trabajas con estas cosas: libro, estantería, papel, libro y pluma, saco de tinta y linterna."),
+                        Map.entry("cleric", "Tu oficio. Trabajas con estas cosas: redstone, lapislázuli, piedra luminosa, perla de ender, botella de encantamiento, carne podrida y soporte de pociones."),
+                        Map.entry("armorer", "Tu oficio. Trabajas con estas cosas: lingote de hierro, carbón, cubo de lava, casco de hierro, peto de hierro, cota de malla, escudo y campana."),
+                        Map.entry("weaponsmith", "Tu oficio. Trabajas con estas cosas: lingote de hierro, carbón, pedernal, espada de hierro, hacha de hierro y muela."),
+                        Map.entry("toolsmith", "Tu oficio. Trabajas con estas cosas: lingote de hierro, carbón, pedernal, pico de hierro, pala de hierro, azada de hierro y campana."),
+                        Map.entry("butcher", "Tu oficio. Trabajas con estas cosas: chuleta cruda, carne de vaca cruda, carne de oveja cruda, pollo crudo, chuleta cocida y filete."),
+                        Map.entry("fisherman", "Tu oficio. Trabajas con estas cosas: bacalao crudo, salmón crudo, pez tropical, caña de pescar, cubo y hoguera."),
+                        Map.entry("fletcher", "Tu oficio. Trabajas con estas cosas: palo, pedernal, hilo, pluma, arco, ballesta y flecha."),
+                        Map.entry("leatherworker", "Tu oficio. Trabajas con estas cosas: cuero, silla de montar, gorro de cuero, túnica de cuero, botas de cuero y piel de conejo."),
+                        Map.entry("shepherd", "Tu oficio. Trabajas con estas cosas: lana, tijeras, alfombra, cama, cuadro y tinte."),
+                        Map.entry("mason", "Tu oficio. Trabajas con estas cosas: ladrillos de piedra, bola de arcilla, ladrillo, terracota, cuarzo, piedra pulida y andesita."),
+                        Map.entry("cartographer", "Tu oficio. Trabajas con estas cosas: papel, brújula, mapa, mapa vacío, estandarte, marco y panel de cristal."),
+                        Map.entry("nitwit", "No tienes oficio. Eres el holgazán del pueblo: hablas de comida, de dormir y de cotilleos, y miras trabajar a los demás."),
+                        Map.entry("child", "Eres un niño y no tienes oficio. Hablas de juegos, de comida y de tu padre."),
+                        Map.entry("villager", "Todavía no tienes oficio. Hablas de comida, del pueblo y de lo que te gustaría hacer.")
+                )
         );
     }
 }

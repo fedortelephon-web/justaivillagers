@@ -83,7 +83,7 @@ public final class PromptBuilder {
                 speaker.personality, pack.style(speaker.styleKey()));
         String tail = pack.t("group_tail", listener.name,
                 transcript.length() == 0 ? pack.t("group_empty") : transcript.toString());
-        return new LlmRequest(pack.t("system"), head + envLine(pack, ctx) + tail,
+        return new LlmRequest(pack.t("system"), head + envLine(pack, ctx) + tradeLine(pack, ctx) + tail,
                 config.temperatureGroup, config.maxTokens);
     }
 
@@ -101,10 +101,25 @@ public final class PromptBuilder {
             }
         }
         sb.append(envLine(pack, ctx));
+        sb.append(tradeLine(pack, ctx));
         if (sessionLabel != null) {
             sb.append("\n\n").append(sessionLabel);
         }
         return sb.toString();
+    }
+
+    /**
+     * The villager's trade and the things it may mention.
+     *
+     * <p>This is what stops a leatherworker from offering crocodile leather. The system prompt only
+     * says "fit your trade"; the model has no idea what fits unless it is told, so the plausible
+     * invention is exactly the kind of detail a person would make up. A list of real items closes
+     * the gap without forbidding speech, because a villager who may mention a saddle and a rabbit
+     * hide has no reason to reach for something that does not exist.
+     */
+    private static String tradeLine(LangPack pack, WorldContext ctx) {
+        String trade = pack.trade(ctx.profession);
+        return trade.isEmpty() ? "" : "\n" + trade;
     }
 
     private static String envLine(LangPack pack, WorldContext ctx) {

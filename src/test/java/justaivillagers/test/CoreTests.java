@@ -138,6 +138,16 @@ public final class CoreTests {
                     || system.contains("budujesz") || system.contains("construis") || system.contains("costruisci")
                     || system.contains("inşa");
             check("pack " + code + " forbids villagers from building", forbidsBuilding);
+            // Every profession the mod can produce needs a trade block, otherwise a leatherworker
+            // silently loses the item list and starts inventing crocodile leather again.
+            java.util.List<String> missingTrades = new java.util.ArrayList<>();
+            for (String prof : en.professions.keySet()) {
+                if (pack.trade(prof).isBlank()) {
+                    missingTrades.add(prof);
+                }
+            }
+            check("pack " + code + " has a trade block for every profession: " + missingTrades,
+                    missingTrades.isEmpty());
         }
         eq("all languages registered", 9, LangData.count());
         VillagerProfile.Cache cache = new VillagerProfile.Cache();
@@ -230,6 +240,20 @@ public final class CoreTests {
         check("ru prompt has profession", ruReply.contains("фермер"));
         String sys = PromptBuilder.systemPrompt("ru");
         check("ru system forbids ai", sys.contains("не ассистент"));
+
+        // The trade block has to reach the prompt, not merely sit in the pack. A leatherworker who
+        // is told the real materials stops inventing crocodile leather; a list nobody passes to the
+        // model fixes nothing.
+        WorldContext leatherCtx = new WorldContext(WorldContext.TimeOfDay.DAY, WorldContext.Weather.CLEAR,
+                "plains", false, "leatherworker", 2);
+        String leatherPrompt = PromptBuilder.reply(config, "en", a, leatherCtx, "Hi", history, null).userPrompt;
+        check("trade block reaches the prompt", leatherPrompt.contains("saddle"));
+        check("trade block names the real material", leatherPrompt.contains("leather"));
+        WorldContext masonCtx = new WorldContext(WorldContext.TimeOfDay.DAY, WorldContext.Weather.CLEAR,
+                "plains", false, "mason", 2);
+        String ruMason = PromptBuilder.reply(config, "ru", a, masonCtx, "Привет", history, null).userPrompt;
+        check("russian trade block reaches the prompt", ruMason.contains("каменный кирпич"));
+        check("a profession without a trade still gets a block", !LangData.of("en").trade("nitwit").isBlank());
 
         // The stutter example used to be a ready-made greeting ("К-как д-дела?"), which the model
         // echoed as the opening of every single line instead of writing its own text.

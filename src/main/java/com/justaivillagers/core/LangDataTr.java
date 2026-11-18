@@ -124,7 +124,25 @@ final class LangDataTr {
                 List.of("hava", "işin", "yemek", "sevmediğin bir komşu", "gece",
                         "aletlerin", "garip bir ses", "planların", "yorgunluk", "yol"),
                 List.of("sabah", "gündüz", "akşam", "gün batımı", "gece", "şafak"),
-                List.of("açık", "yağmur", "fırtına")
+                List.of("açık", "yağmur", "fırtına"),
+                                Map.ofEntries(
+                        Map.entry("farmer", "Mesleğin. Şu şeylerle çalışırsın: buğday, ekmek, havuç, patates, pancar, balkabağı, çapa ve kompost."),
+                        Map.entry("librarian", "Mesleğin. Şu şeylerle çalışırsın: kitap, kitaplık, kâğıt, kitap ve tüy, mürekkep kesesi ve fener."),
+                        Map.entry("cleric", "Mesleğin. Şu şeylerle çalışırsın: redstone, lapis lazuli, parlayan taş, ender incisi, büyü şişesi, çürük et ve mayalama standı."),
+                        Map.entry("armorer", "Mesleğin. Şu şeylerle çalışırsın: demir külçe, kömür, lav kovası, demir miğfer, demir göğüslük, zincir zırh, kalkan ve çan."),
+                        Map.entry("weaponsmith", "Mesleğin. Şu şeylerle çalışırsın: demir külçe, kömür, çakmak taşı, demir kılıç, demir balta ve bileme taşı."),
+                        Map.entry("toolsmith", "Mesleğin. Şu şeylerle çalışırsın: demir külçe, kömür, çakmak taşı, demir kazma, demir kürek, demir çapa ve çan."),
+                        Map.entry("butcher", "Mesleğin. Şu şeylerle çalışırsın: çiğ domuz eti, çiğ sığır eti, çiğ koyun eti, çiğ tavuk, pişmiş domuz eti ve biftek."),
+                        Map.entry("fisherman", "Mesleğin. Şu şeylerle çalışırsın: çiğ morina, çiğ somon, tropikal balık, olta, kova ve kamp ateşi."),
+                        Map.entry("fletcher", "Mesleğin. Şu şeylerle çalışırsın: sopa, çakmak taşı, ip, tüy, yay, arbalet ve ok."),
+                        Map.entry("leatherworker", "Mesleğin. Şu şeylerle çalışırsın: deri, eyer, deri başlık, deri yelek, deri bot ve tavşan derisi."),
+                        Map.entry("shepherd", "Mesleğin. Şu şeylerle çalışırsın: yün, makas, halı, yatak, tablo ve boya."),
+                        Map.entry("mason", "Mesleğin. Şu şeylerle çalışırsın: taş tuğla, kil topu, tuğla, pişmiş toprak, kuvars, cilalı taş ve andezit."),
+                        Map.entry("cartographer", "Mesleğin. Şu şeylerle çalışırsın: kâğıt, pusula, harita, boş harita, flama, eşya çerçevesi ve cam panel."),
+                        Map.entry("nitwit", "Bir mesleğin yok. Köyün tembelisin: yemek, uyku ve dedikodu hakkında konuşursun, çalışanlara bakarsın."),
+                        Map.entry("child", "Sen bir çocuksun ve mesleğin yok. Oyun, yemek ve baban hakkında konuşursun."),
+                        Map.entry("villager", "Henüz bir mesleğin yok. Yemek, köy ve ne yapmak istediğin hakkında konuşursun.")
+                )
         );
     }
 }

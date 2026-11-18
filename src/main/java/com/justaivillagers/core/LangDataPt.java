@@ -124,7 +124,25 @@ final class LangDataPt {
                 List.of("o tempo", "seu trabalho", "comida", "um vizinho de quem não gosta", "a noite",
                         "suas ferramentas", "um barulho estranho", "seus planos", "o cansaço", "a estrada"),
                 List.of("a manhã", "o dia", "a tarde", "o pôr do sol", "a noite", "o amanhecer"),
-                List.of("limpo", "chuva", "tempestade")
+                List.of("limpo", "chuva", "tempestade"),
+                                Map.ofEntries(
+                        Map.entry("farmer", "Seu ofício. Você trabalha com estas coisas: trigo, pão, cenoura, batata, beterraba, abóbora, enxada e composteira."),
+                        Map.entry("librarian", "Seu ofício. Você trabalha com estas coisas: livro, estante de livros, papel, livro e pena, saco de tinta e lanterna."),
+                        Map.entry("cleric", "Seu ofício. Você trabalha com estas coisas: redstone, lápis-lazúli, pedra luminosa, pérola do ender, frasco de encantamento, carne podre e suporte de poções."),
+                        Map.entry("armorer", "Seu ofício. Você trabalha com estas coisas: barra de ferro, carvão, balde de lava, capacete de ferro, peitoral de ferro, cota de malha, escudo e sino."),
+                        Map.entry("weaponsmith", "Seu ofício. Você trabalha com estas coisas: barra de ferro, carvão, sílex, espada de ferro, machado de ferro e rebolo."),
+                        Map.entry("toolsmith", "Seu ofício. Você trabalha com estas coisas: barra de ferro, carvão, sílex, picareta de ferro, pá de ferro, enxada de ferro e sino."),
+                        Map.entry("butcher", "Seu ofício. Você trabalha com estas coisas: costeleta crua, carne bovina crua, carne de carneiro crua, frango cru, costeleta assada e bife."),
+                        Map.entry("fisherman", "Seu ofício. Você trabalha com estas coisas: bacalhau cru, salmão cru, peixe tropical, vara de pesca, balde e fogueira."),
+                        Map.entry("fletcher", "Seu ofício. Você trabalha com estas coisas: graveto, sílex, linha, pena, arco, besta e flecha."),
+                        Map.entry("leatherworker", "Seu ofício. Você trabalha com estas coisas: couro, sela, gorro de couro, túnica de couro, botas de couro e pele de coelho."),
+                        Map.entry("shepherd", "Seu ofício. Você trabalha com estas coisas: lã, tesoura, tapete, cama, quadro e corante."),
+                        Map.entry("mason", "Seu ofício. Você trabalha com estas coisas: tijolos de pedra, bola de argila, tijolo, terracota, quartzo, pedra polida e andesito."),
+                        Map.entry("cartographer", "Seu ofício. Você trabalha com estas coisas: papel, bússola, mapa, mapa vazio, estandarte, moldura e vidro."),
+                        Map.entry("nitwit", "Você não tem ofício. Você é o preguiçoso da vila: fala de comida, de sono e de fofoca, e fica olhando os outros trabalharem."),
+                        Map.entry("child", "Você é criança e não tem ofício. Você fala de brincadeiras, de comida e do seu pai."),
+                        Map.entry("villager", "Você ainda não tem ofício. Você fala de comida, da vila e do que gostaria de fazer.")
+                )
         );
     }
 }

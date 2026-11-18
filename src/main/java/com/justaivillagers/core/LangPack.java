@@ -39,9 +39,17 @@ public final class LangPack {
     /** Weather, indexed like {@link WorldContext.Weather}. */
     public final List<String> weathers;
 
+    /**
+     * Profession id to a block of context: the trade a villager practises and the items it may
+     * mention. Without this the model offered crocodile leather to a leatherworker, because
+     * "mention only things that fit your trade" leaves it to guess what fits.
+     */
+    public final Map<String, String> trades;
+
     LangPack(String code, Map<String, String> text, Map<String, List<String>> fallbacks,
              Map<String, String> professions, Map<String, String> styles, Map<String, String> biomes,
-             List<String> topics, List<String> times, List<String> weathers) {
+             List<String> topics, List<String> times, List<String> weathers,
+             Map<String, String> trades) {
         this.topics = List.copyOf(topics);
         this.code = code;
         this.text = Map.copyOf(text);
@@ -51,6 +59,7 @@ public final class LangPack {
         this.biomes = Map.copyOf(biomes);
         this.times = List.copyOf(times);
         this.weathers = List.copyOf(weathers);
+        this.trades = Map.copyOf(trades);
     }
 
     /**
@@ -92,6 +101,14 @@ public final class LangPack {
             return "";
         }
         return biomes.getOrDefault(id, id);
+    }
+
+    /** The trade block for a profession, or an empty string when there is none. */
+    public String trade(String id) {
+        if (id == null) {
+            return trades.getOrDefault("villager", "");
+        }
+        return trades.getOrDefault(id, trades.getOrDefault("villager", ""));
     }
 
     /** Time of day as a word. The enum is ordered MORNING, DAY, EVENING, SUNSET, NIGHT, DAWN. */
