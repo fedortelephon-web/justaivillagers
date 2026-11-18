@@ -9,7 +9,7 @@ Client-side only: works on any server, no server-side installation, no gameplay 
 
 ## Requirements
 
-- Minecraft **1.21.11**, Fabric Loader 0.20.1+
+- Minecraft **1.21.1**, Fabric Loader 0.16.14+
 - [Fabric API](https://modrinth.com/mod/fabric-api)
 - Java 21+
 - A model server: [Ollama](https://ollama.com) with `ollama pull gemma3:4b` (default), or an
