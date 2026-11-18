@@ -1,0 +1,155 @@
+# Changelog
+
+## 1.1.3 - the languages players actually use
+
+### Added
+
+- **Turkish, Polish and Italian.** Nine languages now: English, Turkish, Spanish, Portuguese,
+  German, Polish, French, Italian and Russian.
+- Turkish is the big one. A 2026 server-market survey put it at **9.7% of Minecraft players** —
+  second after English and seven times French, which the mod already spoke. Guessing the order
+  without data had put the wrong languages in first.
+
+### Fixed
+
+- The order of `Lang.ALL` now follows measured player share rather than a guess, and the class
+  comment records the numbers so the next language is not chosen by intuition either.
+
+## 1.1.2 - more languages
+
+### Added
+
+- **Spanish, Portuguese, German and French.** Villagers now speak the language the game is set to
+  instead of only English and Russian. Regional variants such as `es_mx`, `pt_br` and `pt_pt` are
+  covered, and anything else falls back to English.
+- Translations are complete rather than cosmetic: names, surnames, character traits, canned fallback
+  lines, the dialog screen and the prompts steering the model are all localised per language.
+- Language packs are data (`core/LangDataXx.java`), so the next language is one file plus one
+  registry entry, with a test that fails if any key is missing.
+
+### Fixed
+
+- A German, French, Spanish or Portuguese client used to get **English** villagers even with the mod
+  installed, because only two languages existed and everything non-Russian fell through to English.
+
+
+## 1.1.1 - polish
+
+### Added
+
+- A chat hint on world join when the model backend cannot be reached. It names the configured
+  endpoint, the download link for Ollama and the mod page on Modrinth, so a first-time player is not
+  left guessing why nobody talks.
+- Villagers have surnames now (about one in four), which makes two villagers sharing a name rare.
+- The backend state is written to the log once per join, so a bug report shows the endpoint and
+  model that were actually in use.
+
+### Fixed
+
+- **A non-English, non-Russian game language produced Russian villagers.** Only the English locale
+  was mapped to English and everything else fell through to Russian. German, French, Spanish and the
+  rest now get English.
+- **One villager repeated the stutter example from the prompt** as the opening of every line
+  ("К-как д-дела?"). The example is now neutral and the model writes its own words.
+- **Reactions to a hit or a monster replayed the previous conversation** instead of shouting, which
+  made villagers answer an old question while being chased.
+- **The model prefixed its own name** ("Стёпа: ..."), so chat showed the name twice.
+- **Villagers answered their own mutterings** ("you're still saying that gibberish") and repeated one
+  phrasing forever. Spontaneous lines no longer carry the transcript and now pick a topic.
+- **The whole village spoke at once on world join.** There is a short grace period after loading and
+  a shared limit of one unprompted line at a time.
+- Name collisions: the first name pool was small enough that ten villagers collided 30% of the time.
+
+### Changed
+
+- Defaults: `temperature` 1.2 to 0.8, `temperatureGroup` 1.3 to 0.9, `historyTtlSeconds` 120 to 900,
+  `requestTimeoutSeconds` 60 to 30, `maxTokens` 96 to 160. Existing config files keep their values.
+
+## 1.1.0 — rewrite
+
+A ground-up rework of the internals. Behaviour is close to 1.0.0, but the bugs are gone and the mod
+is now configurable.
+
+### Fixed
+
+- **Hitting a villager produced two identical reactions.** In single player the integrated server
+  runs in the same JVM, so Fabric fired the attack callback from both the client and the server path.
+  The callback now ignores the server side, and a short per-villager debounce catches any remaining
+  duplicate.
+- **All dialogue appeared in one instant.** The model answers much faster than a person talks, so an
+  evening exchange landed as a wall of text. Lines are now paced at `length × 90 ms` (clamped to
+  0.6–12 s) and released one per tick through a chat queue. Reactions to a punch or a monster skip
+  the pace entirely and jump the queue, because an event should answer at once.
+- **The mod crashed on startup on 1.21.11.** `Identifier.of(String, String)` was left in its named
+  form during remapping, so the client died with `NoSuchMethodError` before the main menu. Only a
+  real launch showed it; the unit tests never touch Minecraft classes.
+- **Dialog screen closed after every message.** It now stays open so a conversation can continue.
+- **Enter was detected by polling GLFW every frame.** It is handled through the screen's key
+  handler, so keyboard layouts and IME work.
+- **Hitting a villager was guessed** from `getAttackCooldownProgress() > 0.8`, which fired on every
+  fully charged swing near a villager, including misses. It is now an exact attack event.
+- **Data races.** The dialog history `HashMap` was written from the game thread and from
+  `CompletableFuture.runAsync` at the same time; the name/personality/stutter maps were unsynchronised.
+  History is now thread-safe, bounded, and expires by TTL; the profile cache is bounded and locked.
+- **Requests could hang forever.** The HTTP client had a connect timeout but no per-request
+  timeout. Every request now has one, plus a bounded thread pool and a concurrency cap.
+- **The group-dialogue flag could stay set forever**, silently disabling group dialogues for the
+  rest of the session. It is now released in a guaranteed path.
+- **Backend availability was cached permanently**, so starting Ollama after Minecraft required a
+  restart. Health is refreshed periodically.
+- **`Thread.sleep(3000)` inside an async task** is replaced by an interruptible pause.
+- **Two O(villagers × entities) scans per tick** collapsed into one, with a smaller radius.
+- **JSON was parsed with a hand-written regex and an unescaper** that mangled escapes. Gson is used
+  instead, with a proper fallback chain.
+- **Every language other than English was treated as Russian.** Language resolution is explicit.
+- **Empty `catch (Exception) {}` blocks** swallowed errors silently; failures are logged and, where
+  the player can act on it, surfaced as a message.
+- **Metadata** now matches reality: correct icon path and a real icon, the declared license matches
+  the repository, no leftover `examplemod`/`modid` assets, no empty mixin list pointing at mixin
+  configs that no longer exist.
+
+### Added
+
+- **Group dialogue.** Pressing the dialog key while not aiming at a villager addresses every
+  villager within 12 blocks, closest first, capped at five.
+- **Dialog input is focused immediately**, so typing works without clicking the field first.
+- Config file with validation and clamping: provider, base URL, model, API key, timeouts, token cap,
+  temperature, concurrency, feature toggles, language override, prompt debugging.
+- OpenAI-compatible backend alongside Ollama.
+- Fallback lines, so villagers still say something when the model server is down.
+- Sanitizer that strips markdown, quotes, role prefixes and runaway length from model output.
+- Pure-Java core with a dependency-free test suite and a fake HTTP server covering success, server
+  down, missing model, HTTP 500, timeout, malformed JSON, quoted output and markdown output.
+
+### Changed
+
+- **Every villager is a man.** Female names are gone from both name pools, and the system prompt
+  states that the village has no women and no mothers.
+- **Children have a father only.** A child in danger calls for its dad ("Папа!") instead of help in
+  general, in both the prompt and the fallback lines.
+- **Hitting a villager no longer floods the model.** Each punch used to fire its own request, so a
+  player could spam hits faster than a local LLM could answer. A villager now answers at most once per
+  `hurtCooldownMs` (4 s by default); talking to it is never blocked by that cooldown.
+- **A villager keeps its name when it grows up.** Names used to be drawn from an age-dependent pool,
+  so a baby that became an adult was renamed while its conversation history stayed behind under the
+  same UUID, and the next prompt signed that history with a stranger's name. Names and personalities
+  now come from pools that are valid at any age, and the cached profile keeps its identity when only
+  the age changes.
+- **Old config files are upgraded in place**, so new options such as the speech pace appear in the
+  file instead of staying invisible defaults.
+- **Enter now sends and closes the screen**; the answers are delivered to chat, so the world is
+  reachable again immediately.
+- **Concurrency default raised to 5**, so a question to a full group of five villagers is not partly
+  dropped.
+- Prompts moved out of giant `switch` blocks into a dedicated builder with per-personality text.
+- Request payloads now set `num_predict` and `keep_alive`.
+- Default version bumped to 1.1.0.
+- **License is MIT.**
+
+## 1.1.0 for Minecraft 1.21.1
+
+The same release built against Minecraft 1.21.1, Fabric Loader 0.16.14 and Fabric API 0.115.0.
+Only the Fabric layer differs: 1.21.1 has no `KeyBinding.Category`, uses `keyPressed(int, int, int)`
+instead of the `KeyInput` record, exposes `Entity.getPos()` rather than `getEntityPos()`, and takes
+`VillagerData.getLevel()` / `getProfession().id()` instead of the record accessors. The pure-Java
+core is shared unchanged.

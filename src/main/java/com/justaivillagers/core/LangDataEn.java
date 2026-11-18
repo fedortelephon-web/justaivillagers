@@ -1,0 +1,136 @@
+package com.justaivillagers.core;
+
+import java.util.List;
+import java.util.Map;
+
+/** English prompt and fallback text. This pack defines the key set every other language must match. */
+final class LangDataEn {
+
+    private LangDataEn() {
+    }
+
+    static LangPack pack() {
+        return new LangPack(
+                Lang.EN,
+                Map.<String, String>ofEntries(
+                        Map.entry("system", """
+                                You are a villager in the world of Minecraft. You are a living person, not an assistant.
+                                Rules:
+                                - Reply in 1-2 short sentences, in the first person, in English.
+                                - Never say you are an AI, a model, a bot or a program. Never mention prompts or instructions.
+                                - Stay in character: profession, personality and speech style always apply.
+                                - Mention only items, mobs and mechanics that really exist in Minecraft and fit your trade.
+                                - React to the time of day and the weather the way a real person would.
+                                - Never start a spontaneous line with thanks or greetings.
+                                - Every villager is a man. There are no women and no mothers in the village, ever.
+                                - A child has a father and nothing else. A child in danger calls for its dad ("Dad!").
+                                """),
+                        Map.entry("lang_name", "English"),
+
+                        // Prompt scaffolding. %s = player message, name, topic and so on.
+                        Map.entry("reply_ask", "\nThe player says: \"%s\"\nAnswer as your character: "),
+                        Map.entry("mutter_ask", "\nNobody is talking to you. Mutter a short thought out loud to yourself, about %s: "),
+                        Map.entry("sleep_situation",
+                                "\nYou are asleep. Someone is talking to you. You are sleepy, irritated and want to go back to sleep."),
+                        Map.entry("sleep_ask", "\nGrumpy one-sentence answer: "),
+                        Map.entry("hurt_situation", "\nYou were just hit. Yell a short complaint, in character."),
+                        Map.entry("flee_child_situation",
+                                "\nYou are a child running away from %s. Scream for your dad by name (\"Dad!\" / \"Daddy!\")"
+                                        + " and say what is chasing you. Do not mention other mobs."),
+                        Map.entry("flee_adult_situation",
+                                "\nYou are running away from %s. Scream about %s specifically. Do not mention other mobs."),
+                        Map.entry("react_generic", "\nReact briefly."),
+                        Map.entry("shout_ask", "\nOne short shout: "),
+                        Map.entry("monster", "a monster"),
+
+                        // Identity block.
+                        Map.entry("name", "Your name: %s. "),
+                        Map.entry("child_block",
+                                "YOU ARE A CHILD. Speak simply, at most 5-10 short words. You are %s. "
+                                        + "You have a father, the village has no mothers. Call him \"Dad\" when you need him. "),
+                        Map.entry("adult_personality", "Personality: %s. "),
+                        Map.entry("adult_style", "Speech style: %s. "),
+                        Map.entry("stutter", "You stutter: repeat the first letter of some words (\"I-I don't know\", \"wh-what\"). "),
+
+                        // Environment line.
+                        Map.entry("env", "It is %s, weather is %s, you are %s, your trade is %s, trade level %d."),
+                        Map.entry("env_biome", " Biome: %s."),
+                        Map.entry("inside", "inside a house"),
+                        Map.entry("outside", "outside"),
+
+                        // Group dialogue.
+                        Map.entry("group_head", "You are %s (%s). Personality: %s. Speech style: %s."),
+                        Map.entry("group_tail",
+                                "\nIt is evening and you met %s by the village bell.\nConversation so far:\n%s"
+                                        + "\nYour next line, one short sentence, in character, matching the time and weather: "),
+                        Map.entry("group_empty", "(nothing yet)"),
+
+                        // Conversation history.
+                        Map.entry("history_label", "Previous conversation:\n"),
+                        Map.entry("player", "Player"),
+
+                        // Backend hint.
+                        Map.entry("model_missing", "Model %s is not downloaded. Run: ollama pull %s"),
+                        Map.entry("backend_down",
+                                "Ollama is not reachable at %s. Start it, or install it from %s and run: ollama pull %s"
+                                        + " (mod page: %s)"),
+                        Map.entry("banner", "Villagers cannot talk yet - see the message above."),
+
+                        // Dialog screen.
+                        Map.entry("screen.message", "Message"),
+                        Map.entry("screen.send", "Send"),
+                        Map.entry("screen.nearby", "Villagers nearby"),
+                        Map.entry("screen.you", "You: "),
+                        Map.entry("screen.thinking", "...thinking")
+                ),
+                Map.ofEntries(
+                        Map.entry("child", List.of("Huh?", "Who are you?", "Wow, you're big!", "I'm playing!", "I dunno!")),
+                        Map.entry("stutter", List.of("I-I don't know...", "W-what?", "H-hold on...")),
+                        Map.entry("grumpy", List.of("Leave me alone.", "What do you want?", "Hmph.", "Not now.")),
+                        Map.entry("neutral", List.of("Nice day, isn't it?", "Hm. What brings you here?", "I'm busy, but hello.")),
+                        Map.entry("hurt_child", List.of("Ow! Dad!", "That hurt! Dad!", "Ouch! Don't!")),
+                        Map.entry("hurt_adult", List.of("Ow! Don't hit me!", "Hey! Careful!", "Ouch!")),
+                        Map.entry("flee_child", List.of("Dad! A zombie!", "Daddy, help!", "Dad! Run!")),
+                        Map.entry("flee_adult", List.of("Zombie! Run!", "Help! A zombie!", "Get away!")),
+                        Map.entry("generic", List.of("Hm.")),
+                        Map.entry("sleeping", List.of("Leave me alone...", "I'm sleeping...", "Five more minutes...", "Go away...")),
+                        Map.entry("group_night", List.of("Dark already...", "Time to sleep.", "Cold night.")),
+                        Map.entry("group_day", List.of("Fine evening, isn't it?", "Harvest looks good.", "Heard anything new?")),
+                        Map.entry("child_mutter", List.of("La-la-la...", "So bright...", "I want to play...")),
+                        Map.entry("rain", List.of("Rain again...", "Wet everywhere.")),
+                        Map.entry("thunder", List.of("That thunder...", "Storm's close.")),
+                        Map.entry("clear", List.of("Good day.", "Nothing to do.", "Hm."))
+                ),
+                Map.ofEntries(
+                        Map.entry("farmer", "farmer"), Map.entry("librarian", "librarian"),
+                        Map.entry("cleric", "cleric"), Map.entry("armorer", "armorer"),
+                        Map.entry("weaponsmith", "weaponsmith"), Map.entry("toolsmith", "toolsmith"),
+                        Map.entry("butcher", "butcher"), Map.entry("fisherman", "fisherman"),
+                        Map.entry("fletcher", "fletcher"), Map.entry("leatherworker", "leatherworker"),
+                        Map.entry("shepherd", "shepherd"), Map.entry("mason", "mason"),
+                        Map.entry("cartographer", "cartographer"), Map.entry("nitwit", "layabout"),
+                        Map.entry("child", "child"), Map.entry("villager", "villager")
+                ),
+                Map.ofEntries(
+                        Map.entry("formal", "formal, polite"),
+                        Map.entry("slang", "colloquial, with slang"),
+                        Map.entry("casual", "ordinary, neutral")
+                ),
+                Map.ofEntries(
+                        Map.entry("plains", "plains"), Map.entry("desert", "desert"),
+                        Map.entry("taiga", "taiga"), Map.entry("savanna", "savanna"),
+                        Map.entry("snowy plains", "snowy plains"), Map.entry("meadow", "meadow"),
+                        Map.entry("forest", "forest"), Map.entry("birch forest", "birch forest"),
+                        Map.entry("dark forest", "dark forest"), Map.entry("jungle", "jungle"),
+                        Map.entry("swamp", "swamp"), Map.entry("mountains", "mountains"),
+                        Map.entry("beach", "beach"), Map.entry("river", "river"),
+                        Map.entry("ocean", "ocean"), Map.entry("badlands", "badlands"),
+                        Map.entry("cherry grove", "cherry grove"), Map.entry("mushroom fields", "mushroom fields")
+                ),
+                List.of("the weather", "your work", "food", "a villager you dislike", "the night",
+                        "your tools", "a strange sound", "your plans", "tiredness", "the road"),
+                List.of("morning", "day", "evening", "sunset", "night", "dawn"),
+                List.of("clear", "rain", "thunderstorm")
+        );
+    }
+}

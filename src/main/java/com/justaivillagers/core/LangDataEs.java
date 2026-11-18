@@ -1,0 +1,129 @@
+package com.justaivillagers.core;
+
+import java.util.List;
+import java.util.Map;
+
+/** Spanish prompt and fallback text. Covers both es_es and es_mx, which differ only in vocabulary. */
+final class LangDataEs {
+
+    private LangDataEs() {
+    }
+
+    static LangPack pack() {
+        return new LangPack(
+                Lang.ES,
+                Map.<String, String>ofEntries(
+                        Map.entry("system", """
+                                Eres un aldeano del mundo de Minecraft. Eres una persona real, no un asistente.
+                                Reglas:
+                                - Responde con 1-2 frases cortas, en primera persona, en español.
+                                - Nunca digas que eres una IA, un modelo, un bot o un programa. No menciones instrucciones.
+                                - Mantente siempre en el personaje: el oficio, el carácter y el estilo de habla importan.
+                                - Menciona solo objetos, criaturas y mecánicas que existan de verdad en Minecraft y encajen con tu oficio.
+                                - Reacciona a la hora del día y al tiempo como lo haría una persona real.
+                                - Nunca empieces una frase espontánea con un agradecimiento o un saludo.
+                                - Todos los aldeanos son hombres. En el pueblo no hay mujeres ni madres, nunca.
+                                - Un niño solo tiene padre. Un niño en peligro llama a su papá («¡Papá!»).
+                                """),
+                        Map.entry("lang_name", "español"),
+
+                        Map.entry("reply_ask", "\nEl jugador dice: \"%s\"\nResponde como tu personaje: "),
+                        Map.entry("mutter_ask", "\nNadie te está hablando. Murmura un pensamiento corto en voz alta, sobre %s: "),
+                        Map.entry("sleep_situation",
+                                "\nEstás dormido. Alguien te habla. Tienes sueño, estás irritado y quieres seguir durmiendo."),
+                        Map.entry("sleep_ask", "\nRespuesta malhumorada de una sola frase: "),
+                        Map.entry("hurt_situation", "\nAcaban de golpearte. Grita una queja corta, en tu personaje."),
+                        Map.entry("flee_child_situation",
+                                "\nEres un niño y huyes de %s. Grita llamando a tu papá («¡Papá!») y di qué te persigue."
+                                        + " No menciones otras criaturas."),
+                        Map.entry("flee_adult_situation",
+                                "\nHuyes de %s. Grita precisamente sobre %s. No menciones otras criaturas."),
+                        Map.entry("react_generic", "\nReacciona brevemente."),
+                        Map.entry("shout_ask", "\nUn grito corto: "),
+                        Map.entry("monster", "un monstruo"),
+
+                        Map.entry("name", "Te llamas %s. "),
+                        Map.entry("child_block",
+                                "ERES UN NIÑO. Habla de forma sencilla, como máximo 5-10 palabras cortas. Eres %s. "
+                                        + "Tienes padre, en el pueblo no hay madres. Llámalo «Papá» cuando lo necesites. "),
+                        Map.entry("adult_personality", "Carácter: %s. "),
+                        Map.entry("adult_style", "Estilo de habla: %s. "),
+                        Map.entry("stutter", "Tartamudeas: repite la primera letra de algunas palabras («No-no sé», «qu-qué»). "),
+
+                        Map.entry("env", "Es de %s, el tiempo está %s, estás %s, tu oficio es %s, nivel de comercio %d."),
+                        Map.entry("env_biome", " Bioma: %s."),
+                        Map.entry("inside", "dentro de una casa"),
+                        Map.entry("outside", "al aire libre"),
+
+                        Map.entry("group_head", "Eres %s (%s). Carácter: %s. Estilo de habla: %s."),
+                        Map.entry("group_tail",
+                                "\nEs de noche y te has encontrado con %s junto a la campana del pueblo.\nLa conversación hasta ahora:\n%s"
+                                        + "\nTu siguiente frase, una sola oración corta, en tu personaje, acorde con la hora y el tiempo: "),
+                        Map.entry("group_empty", "(nada todavía)"),
+
+                        Map.entry("history_label", "Conversación anterior:\n"),
+                        Map.entry("player", "Jugador"),
+
+                        Map.entry("model_missing", "El modelo %s no está descargado. Ejecuta: ollama pull %s"),
+                        Map.entry("backend_down",
+                                "No se puede acceder a Ollama en %s. Inícialo o instálalo desde %s y ejecuta:"
+                                        + " ollama pull %s (página del mod: %s)"),
+                        Map.entry("banner", "Los aldeanos todavía no pueden hablar: mira el mensaje de arriba."),
+
+                        Map.entry("screen.message", "Mensaje"),
+                        Map.entry("screen.send", "Enviar"),
+                        Map.entry("screen.nearby", "Aldeanos cerca"),
+                        Map.entry("screen.you", "Tú: "),
+                        Map.entry("screen.thinking", "...pensando")
+                ),
+                Map.ofEntries(
+                        Map.entry("child", List.of("¿Eh?", "¿Quién eres?", "¡Qué grande eres!", "¡Estoy jugando!", "¡No sé!")),
+                        Map.entry("stutter", List.of("No-no sé...", "¿Q-qué?", "Es-espera...")),
+                        Map.entry("grumpy", List.of("Déjame en paz.", "¿Qué quieres?", "Hum.", "Ahora no.")),
+                        Map.entry("neutral", List.of("Buen día, ¿verdad?", "Hum. ¿Qué te trae por aquí?", "Estoy ocupado, pero hola.")),
+                        Map.entry("hurt_child", List.of("¡Ay! ¡Papá!", "¡Eso duele! ¡Papá!", "¡Ay! ¡No!")),
+                        Map.entry("hurt_adult", List.of("¡Ay! ¡No me pegues!", "¡Eh! ¡Cuidado!", "¡Ay!")),
+                        Map.entry("flee_child", List.of("¡Papá! ¡Un zombi!", "¡Papá, ayuda!", "¡Papá! ¡Corre!")),
+                        Map.entry("flee_adult", List.of("¡Un zombi! ¡Corre!", "¡Ayuda! ¡Un zombi!", "¡Vete!")),
+                        Map.entry("generic", List.of("Hum.")),
+                        Map.entry("sleeping", List.of("Déjame...", "Estoy durmiendo...", "Cinco minutos más...", "Vete...")),
+                        Map.entry("group_night", List.of("Ya es de noche...", "Hora de dormir.", "Noche fría.")),
+                        Map.entry("group_day", List.of("Buena tarde, ¿verdad?", "La cosecha pinta bien.", "¿Has oído algo nuevo?")),
+                        Map.entry("child_mutter", List.of("La-la-la...", "Qué claro está...", "Quiero jugar...")),
+                        Map.entry("rain", List.of("Otra vez lluvia...", "Todo está mojado.")),
+                        Map.entry("thunder", List.of("Ese trueno...", "La tormenta está cerca.")),
+                        Map.entry("clear", List.of("Buen día.", "No hay nada que hacer.", "Hum."))
+                ),
+                Map.ofEntries(
+                        Map.entry("farmer", "agricultor"), Map.entry("librarian", "bibliotecario"),
+                        Map.entry("cleric", "sacerdote"), Map.entry("armorer", "armero"),
+                        Map.entry("weaponsmith", "armero de armas"), Map.entry("toolsmith", "herrero"),
+                        Map.entry("butcher", "carnicero"), Map.entry("fisherman", "pescador"),
+                        Map.entry("fletcher", "arquero"), Map.entry("leatherworker", "curtidor"),
+                        Map.entry("shepherd", "pastor"), Map.entry("mason", "albañil"),
+                        Map.entry("cartographer", "cartógrafo"), Map.entry("nitwit", "holgazán"),
+                        Map.entry("child", "niño"), Map.entry("villager", "aldeano")
+                ),
+                Map.ofEntries(
+                        Map.entry("formal", "formal, educado"),
+                        Map.entry("slang", "coloquial, con argot"),
+                        Map.entry("casual", "normal, neutro")
+                ),
+                Map.ofEntries(
+                        Map.entry("plains", "llanuras"), Map.entry("desert", "desierto"),
+                        Map.entry("taiga", "taiga"), Map.entry("savanna", "sabana"),
+                        Map.entry("snowy plains", "llanuras nevadas"), Map.entry("meadow", "pradera"),
+                        Map.entry("forest", "bosque"), Map.entry("birch forest", "bosque de abedules"),
+                        Map.entry("dark forest", "bosque oscuro"), Map.entry("jungle", "jungla"),
+                        Map.entry("swamp", "pantano"), Map.entry("mountains", "montañas"),
+                        Map.entry("beach", "playa"), Map.entry("river", "río"),
+                        Map.entry("ocean", "océano"), Map.entry("badlands", "tierras baldías"),
+                        Map.entry("cherry grove", "arboleda de cerezos"), Map.entry("mushroom fields", "campos de setas")
+                ),
+                List.of("el tiempo", "tu trabajo", "la comida", "un vecino que no te gusta", "la noche",
+                        "tus herramientas", "un ruido extraño", "tus planes", "el cansancio", "el camino"),
+                List.of("la mañana", "el día", "la tarde", "el atardecer", "la noche", "el amanecer"),
+                List.of("despejado", "lluvia", "tormenta")
+        );
+    }
+}
