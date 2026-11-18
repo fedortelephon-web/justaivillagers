@@ -129,6 +129,15 @@ public final class CoreTests {
             check("pack " + code + " topics not empty", !pack.topics.isEmpty());
             // A pack whose prompt still contains a placeholder marker would break the model call.
             check("pack " + code + " system prompt is not a raw key", !pack.t("system").equals("system"));
+            // Villagers never build, so no pack may leave the model free to invent construction work.
+            // The rule is checked by its own marker word rather than by exact wording, because every
+            // language phrases it differently, and a new language must not silently skip it.
+            String system = pack.t("system");
+            boolean forbidsBuilding = system.contains("build") || system.contains("строиш")
+                    || system.contains("construyes") || system.contains("constrói") || system.contains("baust")
+                    || system.contains("budujesz") || system.contains("construis") || system.contains("costruisci")
+                    || system.contains("inşa");
+            check("pack " + code + " forbids villagers from building", forbidsBuilding);
         }
         eq("all languages registered", 9, LangData.count());
         VillagerProfile.Cache cache = new VillagerProfile.Cache();
