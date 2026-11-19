@@ -6,7 +6,40 @@ This is the Minecraft 1.20.1 build of the same release: the feature set is ident
 1.21.11 and 1.21.1 jars, compiled for Java 17 as 1.20.1 expects.
 
 
+### Fixed
+
+- **Check now tests what is on screen.** It used to probe the *saved* config, so changing the
+  address or picking a model and pressing Check re-tested the old values and looked broken. It now
+  probes the address and model currently typed, without saving, and its tooltip says so.
+- **The status line no longer lies.** It printed whichever model happened to be selected, so it
+  could claim "connected" for a model that was never checked. It now names the model that was
+  actually probed, and distinguishes "server up, model not downloaded" from "server unreachable".
+- **"Open page" opens a browser.** It called `java.awt.Desktop`, which does nothing in a game JVM
+  (the AWT toolkit is not initialised), so the button appeared dead. It now uses Minecraft's own
+  opener with the platform command as a fallback, and logs the outcome.
+- **The status text no longer overlaps the progress bar**, and is indented to line up with the
+  buttons instead of starting a few pixels to their left.
+- **Language names were mojibake.** The list showed `EspaГ±ol`, `FranГ§ais` and `Р сГСГСГ...`
+  because the strings had been through a CP1251 round trip. All nine names are correct again, and
+  the same corruption in the Russian and Portuguese setting labels was repaired.
+- **Unknown progress no longer looks frozen.** Some Ollama steps ("removing unused layers") report
+  no total, so the bar sat at 0%. It now sweeps, and the caption gets animated dots.
+
+### Changed
+
+- **The "backend down" message is one line.** It was a paragraph carrying the address, the download
+  link, the `ollama pull` command and the mod page, which players scroll past. It now names the
+  problem, gives the download link and points at the settings key. URLs in chat are clickable.
+- **The mod repeats the reminder when the backend is still down.** Talking to villagers with no
+  Ollama used to fail silently after the first message had scrolled away; pressing the talk key now
+  repeats a short reminder at most once every 45 seconds.
+- **Buttons have tooltips.** Model rows describe what each model is like to talk to, the text fields
+  explain themselves, and the download and Ollama buttons say what they do.
+- **Text fields show a grey placeholder** ("server address", "model name") when empty, and are a
+  couple of pixels narrower than the buttons so their outlines line up.
+
 ### Added
+
 
 - **An in-game settings screen.** Press `O` to open it. Every option in
   `config/justaivillagers.json` is reachable: server address, model, temperature, answer length,

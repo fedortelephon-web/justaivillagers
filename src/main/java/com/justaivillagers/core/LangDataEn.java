@@ -71,11 +71,24 @@ final class LangDataEn {
                         Map.entry("player", "Player"),
 
                         // Backend hint.
-                        Map.entry("model_missing", "Model %s is not downloaded. Run: ollama pull %s"),
-                        Map.entry("backend_down",
-                                "Ollama is not reachable at %s. Start it, or install it from %s and run: ollama pull %s"
-                                        + " (mod page: %s)"),
-                        Map.entry("banner", "Villagers cannot talk yet - see the message above."),
+                        Map.entry("model_missing", "Model %s is not downloaded. Open settings with O and press Download."),
+                        Map.entry("backend_down", "Ollama is not running. Install and start it: %s - then open settings with O and press Check."),
+                        Map.entry("banner", "Open the settings screen with O."),
+                        Map.entry("settings.status.nomodel", "Server is up, but model %s is not downloaded"),
+                        Map.entry("settings.check.tip", "Test the address and model typed above, without saving"),
+                        Map.entry("backend_down.repeat", "Ollama is still not running, so villagers cannot talk. Settings: press O."),
+                        Map.entry("settings.server.hint", "server address"),
+                        Map.entry("settings.server.tip", "Where Ollama or a compatible server listens. Default http://127.0.0.1:11434"),
+                        Map.entry("settings.model.custom.hint", "model name"),
+                        Map.entry("settings.model.custom.tip", "Any model already pulled in Ollama. List them with: ollama list"),
+                        Map.entry("settings.model.tip", "%s - %s to download, about %s of RAM."),
+                        Map.entry("settings.model.get.tip", "Download model %s through Ollama"),
+                        Map.entry("settings.ollama.download.tip", "Download the Ollama installer. Run it yourself afterwards - the mod never launches programs."),
+                        Map.entry("settings.model.tip.qwen2_5_0_5b", "Fastest and simplest. Fine for short lines, often incoherent."),
+                        Map.entry("settings.model.tip.qwen3_0_6b", "A little more coherent than the smallest, keeps the topic well."),
+                        Map.entry("settings.model.tip.gemma3_1b", "A good balance on a weak machine: natural speech, little RAM."),
+                        Map.entry("settings.model.tip.llama3_2_1b", "Noticeably livelier and chattier, but sometimes wanders off."),
+                        Map.entry("settings.model.tip.gemma3_4b", "The best speech quality here. Needs about 5 GB of free RAM."),
 
                         // Dialog screen.
                         Map.entry("screen.message", "Message"),

@@ -12,6 +12,8 @@ import net.fabricmc.fabric.api.event.player.AttackEntityCallback;
 import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.passive.VillagerEntity;
+import net.minecraft.text.ClickEvent;
+import net.minecraft.text.MutableText;
 import net.minecraft.text.Text;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
@@ -52,6 +54,12 @@ public final class JustAiVillagersClient implements ClientModInitializer {
      * has a player instead.
      */
     private volatile String pendingHint;
+
+    /** Minimum gap between repeated "backend is down" reminders, in milliseconds. */
+    private static final long BACKEND_REMINDER_MS = 45_000L;
+
+    /** When the last reminder was sent, so talking does not spam the chat. */
+    private long lastBackendReminder;
 
     @Override
     public void onInitializeClient() {
@@ -119,7 +127,7 @@ public final class JustAiVillagersClient implements ClientModInitializer {
             }
             ModRuntime.LOGGER.info("Backend hint: {}", hint);
             client.execute(() -> {
-                pendingHint = hint + "\n" + com.justaivillagers.core.BackendHint.unavailableBanner(lang);
+                pendingHint = hint;
                 flushHint(client);
             });
         }, "justaivillagers-health");
@@ -134,9 +142,68 @@ public final class JustAiVillagersClient implements ClientModInitializer {
             return;
         }
         pendingHint = null;
-        for (String line : hint.split("\n")) {
-            client.player.sendMessage(Text.literal("§8[justaivillagers] §c" + line), false);
+        sendHintLine(client, hint, 0xFF5555);
+    }
+
+    /**
+     * Sends one hint line, turning any http(s) URL in it into a link the player can click.
+     *
+     * <p>Plain text URLs are useless in chat: they cannot be clicked and are cut off by the chat
+     * width. Every URL is split out into its own styled component with a click event, so the mod
+     * page and the Ollama download both open with one click.
+     */
+    private static void sendHintLine(MinecraftClient client, String text, int colour) {
+        if (client.player == null) {
+            return;
         }
+        MutableText line = Text.literal("§8[justaivillagers] ");
+        line.append(linkify(text, colour));
+        client.player.sendMessage(line, false);
+    }
+
+    /** Splits a sentence into plain runs and clickable URLs. */
+    private static MutableText linkify(String text, int colour) {
+        MutableText out = Text.literal("");
+        java.util.regex.Matcher m = java.util.regex.Pattern
+                .compile("https?://[^\\s)]+")
+                .matcher(text);
+        int last = 0;
+        while (m.find()) {
+            if (m.start() > last) {
+                out.append(Text.literal(text.substring(last, m.start())).styled(st -> st.withColor(colour)));
+            }
+            String url = m.group();
+            out.append(Text.literal(url).styled(st -> st
+                    .withColor(0x55AAFF)
+                    .withUnderline(true)
+                    .withClickEvent(new ClickEvent(ClickEvent.Action.OPEN_URL, url))));
+            last = m.end();
+        }
+        if (last < text.length()) {
+            out.append(Text.literal(text.substring(last)).styled(st -> st.withColor(colour)));
+        }
+        return out;
+    }
+
+    /**
+     * Reminds the player that the backend is down, at most once every so often.
+     *
+     * <p>The first hint is easy to miss: it arrives while the world is still loading and scrolls
+     * away. Pressing the talk key is the moment the player expects speech, so that is when the
+     * reminder is worth repeating - but not on every single press, or it becomes noise.
+     */
+    private void repeatBackendHint(MinecraftClient client) {
+        long now = System.currentTimeMillis();
+        if (now - lastBackendReminder < BACKEND_REMINDER_MS) {
+            return;
+        }
+        com.justaivillagers.core.LlmBackend.Health health = ModRuntime.get().service().health();
+        if (health != null && health.available) {
+            return;
+        }
+        String lang = GameBridge.language(ModRuntime.get().config().languageOverride);
+        lastBackendReminder = now;
+        sendHintLine(client, com.justaivillagers.core.BackendHint.repeatHint(lang), 0xFFAA00);
     }
 
     private void onEndTick(MinecraftClient client) {
@@ -152,6 +219,7 @@ public final class JustAiVillagersClient implements ClientModInitializer {
         }
         flushHint(client);
         if (dialogKey.wasPressed()) {
+            repeatBackendHint(client);
             openDialog(client);
             return;
         }
