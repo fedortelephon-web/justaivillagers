@@ -10,7 +10,11 @@ This is the Minecraft 1.20.1 build of the same release: the feature set is ident
 
 - **An in-game settings screen.** Press `O` to open it. Every option in
   `config/justaivillagers.json` is reachable: server address, model, temperature, answer length,
-  typing speed, memory length, timeouts, the four feature toggles and the villager language.
+  typing speed, memory length, the four feature toggles and the villager language.
+  Temperature, answer length, typing speed and memory length are sliders you drag; the screen
+  also shows the mod's two keybinds and lets you rebind them by clicking the row and pressing a
+  key. The layout adapts to the window, so it fits small GUI scales instead of spilling over the
+  Save button.
 
   The keybind works while playing, not from the title screen: Minecraft does not deliver keybinds to
   a screen that is already open, and a config button on the mod list would need ModMenu as an extra
