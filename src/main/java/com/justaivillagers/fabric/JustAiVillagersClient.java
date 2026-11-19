@@ -29,6 +29,7 @@ public final class JustAiVillagersClient implements ClientModInitializer {
     private static final int MAX_NEARBY = 5;
 
     private KeyBinding dialogKey;
+    private KeyBinding settingsKey;
     private final VillagerWatcher watcher = new VillagerWatcher();
 
     /**
@@ -48,6 +49,10 @@ public final class JustAiVillagersClient implements ClientModInitializer {
         dialogKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.justaivillagers.dialog",
                 GLFW.GLFW_KEY_V,
+                category));
+        settingsKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
+                "key.justaivillagers.settings",
+                GLFW.GLFW_KEY_O,
                 category));
 
         VillagerHooks.bind(watcher);
@@ -123,6 +128,12 @@ public final class JustAiVillagersClient implements ClientModInitializer {
     }
 
     private void onEndTick(MinecraftClient client) {
+        // Settings must be reachable without a world: a player whose Ollama is not set up yet needs
+        // the settings screen precisely when villagers cannot talk, which includes the main menu.
+        if (settingsKey != null && settingsKey.wasPressed() && client.currentScreen == null) {
+            client.setScreen(new VillagerSettingsScreen(null));
+            return;
+        }
         if (client.player == null || client.world == null) {
             return;
         }
