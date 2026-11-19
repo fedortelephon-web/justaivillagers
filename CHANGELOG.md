@@ -1,5 +1,47 @@
 # Changelog
 
+## 1.2.0 - a settings screen, and Ollama without a terminal
+
+### Added
+
+- **An in-game settings screen.** Press `O` to open it from anywhere, including the main menu, so a
+  player whose model server is not running yet can fix that before entering a world. Every option in
+  `config/justaivillagers.json` is reachable: server address, model, temperature, answer length,
+  typing speed, memory length, timeouts, the four feature toggles and the villager language.
+
+  Settings are edited on a copy and written only on Save, so Cancel really cancels. Saving rebuilds
+  the backend in place — no restart, and the villagers keep their names and the conversation so far
+  instead of looking like the mod reset itself.
+
+- **A model picker with five small models.** `qwen2.5:0.5b` (398 MB), `qwen3:0.6b` (523 MB),
+  `gemma3:1b` (806 MB), `llama3.2:1b` (1.3 GB) and `gemma3:4b` (3.4 GB). Each row shows the real
+  download size and the RAM it needs, taken from the Ollama library rather than guessed, because
+  "about a few gigabytes" is not enough to decide with.
+
+- **Model downloads from inside the mod.** The Download button on any model row pulls it through
+  Ollama's own API and shows a progress bar. This is the step where most people give up: being told
+  to run `ollama pull gemma3:4b` assumes you know what a terminal is.
+
+- **Ollama installer download.** When the server is unreachable the screen offers to download the
+  installer and shows where it was saved. It deliberately does not run it — a Minecraft mod that
+  silently launches executables is exactly what malware does, and Windows would show a SmartScreen
+  prompt the player did not ask for. The player double-clicks the file; it is one extra step and no
+  surprises.
+
+- A "Check again" button re-probes the server, so starting Ollama mid-session is noticed without
+  reopening the screen.
+
+### Changed
+
+- The settings screen and its 41 new strings are translated into all nine languages, and the keybind
+  label is translated in all eleven Minecraft language files.
+
+### Fixed
+
+- Rebuilding the runtime after a settings change used to recreate the profile cache and the dialogue
+  history, which renamed every villager and forgot the current conversation. They now survive a
+  settings change and are only created on a cold start.
+
 ## 1.1.5 - villagers know their trade
 
 ### Added

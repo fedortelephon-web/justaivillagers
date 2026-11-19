@@ -30,6 +30,8 @@ import com.justaivillagers.core.WorldContext;
 import com.justaivillagers.core.Lang;
 import com.justaivillagers.core.LangData;
 import com.justaivillagers.core.LangPack;
+import com.justaivillagers.core.ModelCatalog;
+import com.justaivillagers.core.OllamaInstaller;
 
 /** Dependency-free test harness. Exits non-zero on the first failed expectation. */
 public final class CoreTests {
@@ -44,6 +46,7 @@ public final class CoreTests {
             runOpenAiTests(fake);
             runServiceTests(fake);
             runConfigTests();
+            runSettingsTests();
         }
         System.out.println();
         if (failures.isEmpty()) {
@@ -578,6 +581,91 @@ public final class CoreTests {
                 });
         check("blank message rejected", !rejected);
         service.shutdown();
+    }
+
+
+    // ---------------------------------------------------------------- settings
+
+    private static void runSettingsTests() {
+        section("model catalogue");
+
+        check("catalogue has several models", ModelCatalog.ENTRIES.size() >= 5);
+        check("catalogue default is offered", ModelCatalog.find(ModelCatalog.DEFAULT_ID) != null);
+        check("catalogue ids are unique", ModelCatalog.ENTRIES.stream()
+                .map(e -> e.id).distinct().count() == ModelCatalog.ENTRIES.size());
+        check("catalogue sizes are plausible", ModelCatalog.ENTRIES.stream()
+                .allMatch(e -> e.sizeMb > 100 && e.sizeMb < 10000));
+        check("catalogue RAM exceeds download size", ModelCatalog.ENTRIES.stream()
+                .allMatch(e -> e.ramMb > e.sizeMb));
+        check("catalogue quality is a 1-5 score", ModelCatalog.ENTRIES.stream()
+                .allMatch(e -> e.quality >= 1 && e.quality <= 5));
+        check("find returns null for a custom id", ModelCatalog.find("someone/own-model:latest") == null);
+        eq("size label MB", "398 MB", ModelCatalog.sizeLabel(ModelCatalog.find("qwen2.5:0.5b")));
+        eq("size label GB", "3.3 GB", ModelCatalog.sizeLabel(ModelCatalog.find("gemma3:4b")));
+        eq("label expands the family", "Gemma 3 1B", ModelCatalog.find("gemma3:1b").label());
+        eq("label keeps unknown names", "Other 7B", new ModelCatalog.Entry("other:7b", 100, 200, 1).label());
+
+        section("settings translation");
+
+        String[] uiKeys = {
+                "settings.title", "settings.tab.model", "settings.tab.features", "settings.tab.language",
+                "settings.server", "settings.model", "settings.model.download", "settings.model.needs",
+                "settings.ollama.title", "settings.ollama.body", "settings.ollama.download",
+                "settings.check", "settings.status.ok", "settings.status.down",
+                "settings.save", "settings.cancel", "settings.close", "settings.saved",
+                "settings.language.auto", "settings.language",
+        };
+        for (String code : Lang.ALL) {
+            LangPack pack = LangData.of(code);
+            List<String> missing = new ArrayList<>();
+            for (String key : uiKeys) {
+                String value = pack.t(key, "x", "y");
+                if (value == null || value.isBlank() || value.equals(key)) {
+                    missing.add(key);
+                }
+            }
+            check("pack " + code + " has every settings string: " + missing, missing.isEmpty());
+        }
+        // A translated placeholder must still be a placeholder, or the model name never appears.
+        for (String code : Lang.ALL) {
+            String needs = LangData.of(code).t("settings.model.needs", "A", "B");
+            check("pack " + code + " keeps both placeholders", needs.contains("A") && needs.contains("B"));
+        }
+
+        section("settings round trip");
+
+        ModConfig original = new ModConfig();
+        original.model = "qwen3:0.6b";
+        original.temperature = 1.3;
+        original.enableGroupDialogues = false;
+        original.languageOverride = Lang.TR;
+        ModConfig copy = original.copy();
+        copy.model = "gemma3:1b";
+        eq("copy keeps the original model", "qwen3:0.6b", original.model);
+        // copy() is a snapshot, not a live view: changing the copy must not touch the original.
+        eq("copy carries the value over", "gemma3:1b", copy.model);
+        eq("copy keeps toggles", false, copy.enableGroupDialogues);
+        eq("copy keeps the language", Lang.TR, copy.languageOverride);
+        check("copy is a different object", original != copy);
+
+        ModConfig broken = new ModConfig();
+        broken.model = "  ";
+        broken.temperature = 99.0;
+        broken.maxTokens = 100000;
+        broken.baseUrl = "http://127.0.0.1:11434///";
+        broken.languageOverride = null;
+        broken.sanitize();
+        eq("blank model resets to the default", ModelCatalog.DEFAULT_ID, broken.model);
+        eq("temperature is clamped", 2.0, broken.temperature);
+        eq("token limit is clamped", 512, broken.maxTokens);
+        eq("trailing slashes are removed", "http://127.0.0.1:11434", broken.baseUrl);
+        eq("null language becomes auto", "", broken.languageOverride);
+
+        section("installer");
+
+        check("installer knows this OS", OllamaInstaller.urlForCurrentOs() != null
+                || System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT).contains("linux"));
+        check("installer file name is not empty", !OllamaInstaller.fileNameForCurrentOs().isBlank());
     }
 
     // ---------------------------------------------------------------- helpers
