@@ -29,6 +29,18 @@ public final class JustAiVillagersClient implements ClientModInitializer {
 
     private KeyBinding dialogKey;
     private KeyBinding settingsKey;
+
+    /** The live keybinds, so the settings screen can show and rebind them. */
+    private static KeyBinding dialogBinding;
+    private static KeyBinding settingsBinding;
+
+    static KeyBinding dialogBinding() {
+        return dialogBinding;
+    }
+
+    static KeyBinding settingsBinding() {
+        return settingsBinding;
+    }
     private final VillagerWatcher watcher = new VillagerWatcher();
 
     /**
@@ -52,6 +64,8 @@ public final class JustAiVillagersClient implements ClientModInitializer {
                 "key.justaivillagers.settings",
                 GLFW.GLFW_KEY_O,
                 "key.categories.justaivillagers.general"));
+        dialogBinding = dialogKey;
+        settingsBinding = settingsKey;
 
         VillagerHooks.bind(watcher);
         ClientTickEvents.END_CLIENT_TICK.register(this::onEndTick);
