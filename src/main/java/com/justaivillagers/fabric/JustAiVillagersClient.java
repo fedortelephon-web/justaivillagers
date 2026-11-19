@@ -128,8 +128,9 @@ public final class JustAiVillagersClient implements ClientModInitializer {
     }
 
     private void onEndTick(MinecraftClient client) {
-        // Settings must be reachable without a world: a player whose Ollama is not set up yet needs
-        // the settings screen precisely when villagers cannot talk, which includes the main menu.
+        // The settings keybind works while no other screen is open. Minecraft only polls keybinds
+        // from the in-game input handler, so this cannot fire from the title screen; the screen is
+        // still reachable within seconds of joining a world.
         if (settingsKey != null && settingsKey.wasPressed() && client.currentScreen == null) {
             client.setScreen(new VillagerSettingsScreen(null));
             return;
