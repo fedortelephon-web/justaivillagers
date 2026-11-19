@@ -97,6 +97,9 @@ public final class VillagerSettingsScreen extends Screen {
     /** Model name that was actually probed, so the label cannot claim an untested one. */
     private String probedModel = "";
 
+    /** Line under the Ollama buttons that says where the copied command goes. */
+    private int hintY = -1;
+
     public VillagerSettingsScreen(Screen parent) {
         super(Text.literal("Just AI Villagers"));
         this.parent = parent;
@@ -185,8 +188,8 @@ public final class VillagerSettingsScreen extends Screen {
     /** How many rows the active tab needs; used only to size rows before laying them out. */
     private int rowCount() {
         if (tab == TAB_MODEL) {
-            // Address, check, five catalogue models, custom id, Ollama helper.
-            return 4 + ModelCatalog.ENTRIES.size() + 1;
+            // Address, check, five catalogue models, custom id, Ollama helper, two hint lines.
+            return 4 + ModelCatalog.ENTRIES.size() + 3;
         }
         if (tab == TAB_BEHAVIOUR) {
             return 5 + 4 + 2;
@@ -205,6 +208,7 @@ public final class VillagerSettingsScreen extends Screen {
         int w = contentWidth;
         int y = contentTop();
         int fieldH = Math.max(12, rowHeight - 2);
+        this.hintY = -1;
 
         // Server address. The field is a couple of pixels narrower than the buttons because a text
         // field draws a border inside its box, so at equal widths it looked wider than the rows.
@@ -239,6 +243,12 @@ public final class VillagerSettingsScreen extends Screen {
             label = this.textRenderer.trimToWidth(label, w - downloadW - 12);
             ButtonWidget select = ButtonWidget.builder(Text.literal(label), b -> {
                 draft.model = target.id;
+                // rebuild() restores the text the player had typed, on purpose, so that a slider drag
+                // cannot wipe an address. That also means selecting a model would leave the old name
+                // in the field; writing it here makes the picker do what it looks like it does.
+                if (customModelField != null) {
+                    customModelField.setText(target.id);
+                }
                 rebuild();
             }).dimensions(x, y, w - downloadW - 4, fieldH).build();
             select.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(Text.literal(modelTip(entry))));
@@ -279,27 +289,53 @@ public final class VillagerSettingsScreen extends Screen {
                     Text.literal(t("settings.ollama.download.tip"))));
             addDrawableChild(get);
 
-            ButtonWidget page = ButtonWidget.builder(
-                    Text.literal(t("settings.ollama.page")), b -> openPage())
+            // Copying beats opening a browser: the mod cannot know which browser the player uses,
+            // and on this machine the system handler for https is not a browser at all. A string on
+            // the clipboard works everywhere.
+            ButtonWidget copyLink = ButtonWidget.builder(
+                    Text.literal(t("settings.ollama.copy")), b -> copyToClipboard(
+                            com.justaivillagers.core.BackendHint.OLLAMA_URL,
+                            t("settings.ollama.copied")))
                     .dimensions(x + third + 4, y, third, fieldH).build();
-            page.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+            copyLink.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
                     Text.literal(com.justaivillagers.core.BackendHint.OLLAMA_URL)));
-            addDrawableChild(page);
+            addDrawableChild(copyLink);
 
-            // While a download runs the third slot cancels it, so a stuck or unwanted installer does
-            // not leave the player waiting for a file they no longer want.
-            if (installer != null) {
-                ButtonWidget cancel = ButtonWidget.builder(
-                        Text.literal(t("settings.cancel")), b -> cancelInstaller())
-                        .dimensions(x + 2 * (third + 4), y, third, fieldH).build();
-                addDrawableChild(cancel);
+            ButtonWidget copyCmd = ButtonWidget.builder(
+                    Text.literal(t("settings.ollama.command.copy")), b -> copyToClipboard(
+                            com.justaivillagers.core.BackendHint.START_COMMAND,
+                            t("settings.ollama.command.copied")))
+                    .dimensions(x + 2 * (third + 4), y, third, fieldH).build();
+            copyCmd.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                    Text.literal(t("settings.ollama.command.tip"))));
+            addDrawableChild(copyCmd);
+            y += rowHeight;
+
+            // The command is useless if the player does not know where it goes, and "PowerShell or
+            // cmd" is not obvious to someone who has never opened one.
+            if (installer == null) {
+                this.hintY = y;
             }
+        }
+
+        // Cancelling is available from the first moment of the download, on its own full-width row
+        // so it is impossible to miss.
+        if (installer != null) {
+            ButtonWidget cancel = ButtonWidget.builder(
+                    Text.literal(t("settings.ollama.cancel")), b -> cancelInstaller())
+                    .dimensions(x, y, w, fieldH).build();
+            cancel.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                    Text.literal(t("settings.ollama.cancel.tip"))));
+            addDrawableChild(cancel);
             y += rowHeight;
         }
 
         // Everything below this point is painted text and bars, never widgets, so it starts under
         // the last button instead of sharing its line.
         this.progressY = y;
+        if (this.hintY < 0) {
+            this.hintY = y;
+        }
     }
 
     /** A one-line description of a catalogue model, for the row's tooltip. */
@@ -372,6 +408,9 @@ public final class VillagerSettingsScreen extends Screen {
         Path dir = ModRuntime.get().configFile().getParent();
         OllamaInstaller active = new OllamaInstaller(ModRuntime.LOGGER);
         this.installer = active;
+        // Without this the Cancel button only appeared on the next unrelated interaction, because
+        // the widget list is rebuilt on a flag rather than every frame.
+        needsRebuild = true;
         active.download(dir, new OllamaInstaller.Listener() {
             @Override
             public void onProgress(long completed, long total) {
@@ -395,44 +434,18 @@ public final class VillagerSettingsScreen extends Screen {
         });
     }
 
+
     /**
-     * Opens the Ollama download page in the system browser.
+     * Puts a string on the system clipboard and tells the player in chat.
      *
-     * <p>Two attempts, because neither works everywhere: Minecraft's own opener is the polite path,
-     * and the platform command is the fallback for a JVM where it silently refuses. Every outcome is
-     * logged, so "the button does nothing" becomes a line in the log instead of a mystery.
+     * <p>Chat is used rather than a toast: a player who has just copied something needs to know the
+     * copy happened, and the line also survives long enough to read.
      */
-    private void openPage() {
-        String url = com.justaivillagers.core.BackendHint.OLLAMA_URL;
-        boolean opened = false;
-        try {
-            net.minecraft.util.Util.getOperatingSystem().open(java.net.URI.create(url));
-            opened = true;
-            ModRuntime.LOGGER.info("Opened {} via Minecraft", url);
-        } catch (Exception | Error e) {
-            ModRuntime.LOGGER.warn("Minecraft could not open {}: {}", url, e.toString());
-        }
-        if (opened) {
-            return;
-        }
-        try {
-            String os = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT);
-            ProcessBuilder pb;
-            if (os.contains("win")) {
-                pb = new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", url);
-            } else if (os.contains("mac")) {
-                pb = new ProcessBuilder("open", url);
-            } else {
-                pb = new ProcessBuilder("xdg-open", url);
-            }
-            pb.start();
-            ModRuntime.LOGGER.info("Opened {} via the platform command", url);
-        } catch (Exception | Error e) {
-            // Last resort: put the address where the player can copy it.
-            ModRuntime.LOGGER.warn("Could not open a browser for {}: {}", url, e.toString());
-            if (client != null && client.player != null) {
-                client.player.sendMessage(net.minecraft.text.Text.literal("§8[justaivillagers] §e" + url), false);
-            }
+    private void copyToClipboard(String value, String confirmation) {
+        net.minecraft.client.MinecraftClient.getInstance().keyboard.setClipboard(value);
+        if (net.minecraft.client.MinecraftClient.getInstance().player != null) {
+            net.minecraft.client.MinecraftClient.getInstance().player.sendMessage(
+                    net.minecraft.text.Text.literal("§8[justaivillagers] §a" + confirmation), false);
         }
     }
 
@@ -740,6 +753,13 @@ public final class VillagerSettingsScreen extends Screen {
             int lineY = progressY;
             int limit = this.height - BOTTOM_BAR;
 
+            // Where to paste the copied command. Two short lines rather than one long one, because
+            // the full sentence does not fit at the default window width.
+            if (health != null && !health.available && installer == null && hintY >= 0) {
+                drawWrapped(context, t("settings.ollama.paste.hint"), x, hintY, w, 0xAAAAAA, limit);
+                lineY = Math.max(lineY, hintY + 20);
+            }
+
             // Model download: one caption, one bar, then four pixels of breathing room.
             if (pullingModel != null) {
                 boolean known = pullTotal > 0;
@@ -781,6 +801,20 @@ public final class VillagerSettingsScreen extends Screen {
     }
 
     /** Draws one line of status text, trimmed to the content width and never off the bottom. */
+    /** Draws text cut into lines by width, so a long sentence does not run off the screen. */
+    private void drawWrapped(DrawContext context, String text, int x, int y, int w, int colour, int limit) {
+        java.util.List<net.minecraft.text.OrderedText> lines = this.textRenderer.wrapLines(
+                net.minecraft.text.Text.literal(text), w);
+        int row = y;
+        for (net.minecraft.text.OrderedText line : lines) {
+            if (row + 9 > limit) {
+                return;
+            }
+            context.drawTextWithShadow(this.textRenderer, line, x, row, colour);
+            row += 10;
+        }
+    }
+
     private void drawLine(DrawContext context, String text, int x, int y, int w, int colour, int limit) {
         if (y + 9 > limit) {
             return;
