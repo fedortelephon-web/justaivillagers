@@ -1,11 +1,15 @@
 package com.justaivillagers.core;
 
 /**
- * Turns a failed backend health check into one line the player can act on.
+ * Turns a failed backend health check into one short line the player can act on.
  *
  * <p>Without this the mod is silent when the model server is missing: villagers simply never speak,
- * and the player has no way to tell a broken mod from an unstarted Ollama. The line names the problem
- * and carries the two links a new user actually needs - where to download Ollama, and the mod page.
+ * and the player has no way to tell a broken mod from an unstarted Ollama. The line names the
+ * problem, gives the one command that fixes it, and points at the settings key.
+ *
+ * <p>The text is deliberately one sentence. The previous version stacked the address, the download
+ * link, the model command and the mod page into a wall of grey chat text, which players scroll past
+ * without reading.
  */
 public final class BackendHint {
 
@@ -30,11 +34,21 @@ public final class BackendHint {
         if (detail.contains("not installed")) {
             return pack.t("model_missing", model, model);
         }
-        return pack.t("backend_down", baseUrl, OLLAMA_URL, model, MODRINTH_URL);
+        return pack.t("backend_down", OLLAMA_URL);
     }
 
     /** Shown once per world join when the backend is down, so the player is not left guessing. */
     public static String unavailableBanner(String lang) {
         return LangData.of(Lang.normalise(lang)).t("banner");
+    }
+
+    /**
+     * The reminder repeated while the player keeps talking to villagers with no backend.
+     *
+     * <p>Deliberately shorter than the first message: the player has already seen the full hint, and
+     * a wall of text every time they press the key would be worse than silence.
+     */
+    public static String repeatHint(String lang) {
+        return LangData.of(Lang.normalise(lang)).t("backend_down.repeat");
     }
 }

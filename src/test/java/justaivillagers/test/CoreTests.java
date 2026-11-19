@@ -564,20 +564,34 @@ public final class CoreTests {
         String downEn = BackendHint.forHealth(
                 LlmBackend.Health.down("cannot reach http://127.0.0.1:11434"), "en", "gemma3:4b",
                 "http://127.0.0.1:11434");
-        check("unreachable hint names the url", downEn != null && downEn.contains("127.0.0.1:11434"));
+        // The hint was rewritten to be one sentence: a wall of chat text is scrolled past. These
+        // checks pin the parts that must survive that shortening.
         check("unreachable hint links Ollama", downEn != null && downEn.contains(BackendHint.OLLAMA_URL));
-        check("unreachable hint links the mod", downEn != null && downEn.contains(BackendHint.MODRINTH_URL));
+        check("unreachable hint names the settings key",
+                downEn != null && downEn.contains(" O "));
+        check("unreachable hint stays one line", downEn != null && !downEn.contains("\n"));
+        check("unreachable hint is short", downEn != null && downEn.length() <= 170);
         String missing = BackendHint.forHealth(
                 LlmBackend.Health.down("model gemma3:4b is not installed"), "en", "gemma3:4b", "http://x");
-        check("missing model hint has pull command",
-                missing != null && missing.contains("ollama pull gemma3:4b"));
-        check("missing model hint is not a download link",
-                missing != null && !missing.contains(BackendHint.OLLAMA_URL));
+        check("missing model hint names the model",
+                missing != null && missing.contains("gemma3:4b"));
+        check("missing model hint points at settings",
+                missing != null && missing.contains(" O "));
+        check("missing model hint is one line", missing != null && !missing.contains("\n"));
         String downRu = BackendHint.forHealth(
                 LlmBackend.Health.down("cannot reach http://127.0.0.1:11434"), "ru", "gemma3:4b",
                 "http://127.0.0.1:11434");
-        check("russian hint is russian", downRu != null && downRu.contains("недоступна"));
+        check("russian hint is russian", downRu != null && downRu.contains("Ollama"));
         check("russian hint links Ollama", downRu != null && downRu.contains(BackendHint.OLLAMA_URL));
+        check("russian hint is not the english one", downRu != null && !downRu.equals(downEn));
+
+        // The reminder shown on repeated talk attempts must be shorter than the first message.
+        String repeatEn = BackendHint.repeatHint("en");
+        check("repeat hint exists", repeatEn != null && !repeatEn.isBlank());
+        check("repeat hint is shorter than the first",
+                downEn != null && repeatEn.length() < downEn.length());
+        check("repeat hint names the settings key", repeatEn.contains(" O"));
+        check("repeat hint has no url", !repeatEn.contains("http"));
 
         section("empty request guard");
         VillagerAiService service = new VillagerAiService(new ModConfig(), Log.NOOP,
