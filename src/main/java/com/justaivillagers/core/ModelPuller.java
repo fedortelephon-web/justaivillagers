@@ -48,6 +48,14 @@ public final class ModelPuller {
     private final Log log;
     private volatile boolean cancelled;
 
+    /** Blobs smaller than this are config, templates and manifests, not model weights. */
+    private static final long LARGE_BLOB_BYTES = 4L * 1024 * 1024;
+
+    /** Whether a blob of this size is model weights worth showing progress for. */
+    public static boolean isLargeBlob(long totalBytes) {
+        return totalBytes >= LARGE_BLOB_BYTES;
+    }
+
     public ModelPuller(ModConfig config, Log log) {
         this.config = config;
         this.log = log;
@@ -139,7 +147,12 @@ public final class ModelPuller {
                     return;
                 }
                 if (completed >= 0 && total > 0) {
-                    listener.onProgress(completed, total);
+                    // Ollama reports every blob, including 68-byte config files, so a naive progress
+                    // bar hits 100% seconds after the download starts and sits there. Only the big
+                    // weight blobs move the bar; small ones are just status noise.
+                    if (isLargeBlob(total)) {
+                        listener.onProgress(completed, total);
+                    }
                 } else if (!status.isEmpty()) {
                     listener.onStatus(status);
                 }

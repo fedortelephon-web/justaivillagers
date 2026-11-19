@@ -492,8 +492,13 @@ public final class VillagerSettingsScreen extends Screen {
 
             if (pullingModel != null) {
                 float progress = pullTotal > 0 ? (float) pullDone / (float) pullTotal : 0f;
+                // A model can be several blobs, so the percentage legitimately restarts; the status
+                // text says which phase is running so the bar does not look stuck or broken.
                 String text = t("settings.model.downloading", percent(progress));
-                context.drawTextWithShadow(this.textRenderer, Text.literal(text), x, lineY, 0xFFFFFF);
+                if (!pullStatus.isEmpty()) {
+                    text = text + "  " + trim(pullStatus);
+                }
+                context.drawTextWithShadow(this.textRenderer, Text.literal(trim(text)), x, lineY, 0xFFFFFF);
                 drawBar(context, x, lineY + 11, fieldWidth, progress);
             } else if (!pullStatus.isEmpty()) {
                 context.drawTextWithShadow(this.textRenderer, Text.literal(trim(pullStatus)), x, lineY, 0xFFAA00);
