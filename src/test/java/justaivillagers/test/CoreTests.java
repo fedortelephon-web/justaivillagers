@@ -617,11 +617,15 @@ public final class CoreTests {
 
         String[] uiKeys = {
                 "settings.title", "settings.tab.model", "settings.tab.features", "settings.tab.language",
-                "settings.server", "settings.model", "settings.model.download", "settings.model.needs",
+                "settings.server", "settings.model", "settings.model.get", "settings.model.download", "settings.model.needs",
                 "settings.ollama.title", "settings.ollama.body", "settings.ollama.download",
                 "settings.check", "settings.status.ok", "settings.status.down",
                 "settings.save", "settings.cancel", "settings.close", "settings.saved",
                 "settings.language.auto", "settings.language",
+                "settings.key.dialog", "settings.key.settings", "settings.key.press",
+                "settings.temperature", "settings.maxTokens", "settings.speechPace",
+                "settings.history", "settings.spontaneous", "settings.group",
+                "settings.reactions", "settings.fallback", "settings.debug",
         };
         for (String code : Lang.ALL) {
             LangPack pack = LangData.of(code);

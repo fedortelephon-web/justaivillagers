@@ -13,7 +13,6 @@ import net.minecraft.client.MinecraftClient;
 import net.minecraft.client.option.KeyBinding;
 import net.minecraft.entity.passive.VillagerEntity;
 import net.minecraft.text.Text;
-import net.minecraft.util.Identifier;
 import net.minecraft.util.math.Box;
 import net.minecraft.util.math.Vec3d;
 import org.lwjgl.glfw.GLFW;
@@ -30,6 +29,18 @@ public final class JustAiVillagersClient implements ClientModInitializer {
 
     private KeyBinding dialogKey;
     private KeyBinding settingsKey;
+
+    /** The live keybinds, so the settings screen can show and rebind them. */
+    private static KeyBinding dialogBinding;
+    private static KeyBinding settingsBinding;
+
+    static KeyBinding dialogBinding() {
+        return dialogBinding;
+    }
+
+    static KeyBinding settingsBinding() {
+        return settingsBinding;
+    }
     private final VillagerWatcher watcher = new VillagerWatcher();
 
     /**
@@ -44,16 +55,17 @@ public final class JustAiVillagersClient implements ClientModInitializer {
 
     @Override
     public void onInitializeClient() {
-        // A mod-owned category keeps the keybind out of the vanilla "Misc" group.
-        KeyBinding.Category category = KeyBinding.Category.create(Identifier.of(MOD_ID, "general"));
+        // 1.21.1 has no KeyBinding.Category type; the third argument is still the translation key.
         dialogKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.justaivillagers.dialog",
                 GLFW.GLFW_KEY_V,
-                category));
+                "key.categories.justaivillagers.general"));
         settingsKey = KeyBindingHelper.registerKeyBinding(new KeyBinding(
                 "key.justaivillagers.settings",
                 GLFW.GLFW_KEY_O,
-                category));
+                "key.categories.justaivillagers.general"));
+        dialogBinding = dialogKey;
+        settingsBinding = settingsKey;
 
         VillagerHooks.bind(watcher);
         ClientTickEvents.END_CLIENT_TICK.register(this::onEndTick);
@@ -181,14 +193,14 @@ public final class JustAiVillagersClient implements ClientModInitializer {
         if (client.player == null || client.world == null) {
             return found;
         }
-        Vec3d eye = client.player.getEntityPos();
+        Vec3d eye = client.player.getPos();
         Box box = new Box(eye, eye).expand(NEARBY_RADIUS);
         for (VillagerEntity villager : client.world.getEntitiesByClass(VillagerEntity.class, box, e -> true)) {
-            if (villager.getEntityPos().squaredDistanceTo(eye) <= NEARBY_RADIUS * NEARBY_RADIUS) {
+            if (villager.getPos().squaredDistanceTo(eye) <= NEARBY_RADIUS * NEARBY_RADIUS) {
                 found.add(villager);
             }
         }
-        found.sort(java.util.Comparator.comparingDouble(v -> v.getEntityPos().squaredDistanceTo(eye)));
+        found.sort(java.util.Comparator.comparingDouble(v -> v.getPos().squaredDistanceTo(eye)));
         if (found.size() > limit) {
             return new ArrayList<>(found.subList(0, limit));
         }
