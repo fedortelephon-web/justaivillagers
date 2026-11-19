@@ -34,7 +34,7 @@ public final class VillagerContextReader {
 
         VillagerData data = villager.getVillagerData();
         String profession = professionName(data);
-        int level = data == null ? 1 : data.level();
+        int level = data == null ? 1 : data.getLevel();
 
         return new WorldContext(timeOfDay, weather, biomeName(world, pos), indoors, profession, level);
     }
@@ -43,8 +43,8 @@ public final class VillagerContextReader {
         if (data == null) {
             return "villager";
         }
-        RegistryEntry<?> entry = data.profession();
-        String id = entry.getIdAsString();
+        // 1.21.1 exposes a plain VillagerProfession with a string id such as "minecraft:farmer".
+        String id = data.getProfession().id();
         int slash = id.indexOf(':');
         return slash >= 0 ? id.substring(slash + 1) : id;
     }

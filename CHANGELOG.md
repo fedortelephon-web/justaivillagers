@@ -2,6 +2,10 @@
 
 ## 1.2.0 - a settings screen, and Ollama without a terminal
 
+This is the Minecraft 1.20.1 build of the same release: the feature set is identical to the
+1.21.11 and 1.21.1 jars, compiled for Java 17 as 1.20.1 expects.
+
+
 ### Added
 
 - **An in-game settings screen.** Press `O` to open it. Every option in

@@ -108,10 +108,10 @@ public final class VillagerWatcher {
         if (client.player == null || client.world == null) {
             return out;
         }
-        Vec3d eye = client.player.getEntityPos();
+        Vec3d eye = client.player.getPos();
         Box box = new Box(eye, eye).expand(NEARBY_RADIUS);
         for (VillagerEntity villager : client.world.getEntitiesByClass(VillagerEntity.class, box, e -> true)) {
-            if (villager.getEntityPos().squaredDistanceTo(eye) <= NEARBY_RADIUS_SQ) {
+            if (villager.getPos().squaredDistanceTo(eye) <= NEARBY_RADIUS_SQ) {
                 out.add(villager);
             }
         }
@@ -123,7 +123,7 @@ public final class VillagerWatcher {
             return;
         }
         List<HostileEntity> hostiles = new ArrayList<>();
-        Vec3d eye = client.player.getEntityPos();
+        Vec3d eye = client.player.getPos();
         Box box = new Box(eye, eye).expand(HOSTILE_RADIUS * 2);
         for (HostileEntity hostile : client.world.getEntitiesByClass(HostileEntity.class, box, e -> true)) {
             if (hostile.squaredDistanceTo(client.player) <= HOSTILE_RADIUS_SQ * 4) {

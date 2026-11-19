@@ -276,7 +276,14 @@ public final class CoreTests {
         // does not produce the same sentence every few seconds.
         String mutter = PromptBuilder.spontaneous(config, "en", a, ctx, history, null).userPrompt;
         check("mutter names a topic", mutter.contains("Mutter a short thought"));
-        check("mutter has a topic after the cue", mutter.length() > mutter.indexOf("about ") + 12);
+        // The template ends with the topic and a colon, so a short topic leaves exactly
+        // twelve characters after the cue. Asserting "longer than" made this fail once in a
+        // while whenever the random topic happened to be "food".
+        int cue = mutter.indexOf("about ");
+        String afterCue = cue < 0 ? "" : mutter.substring(cue + 6).trim();
+        // The template ends with the topic and a colon: "about food: ".
+        String topic = afterCue.endsWith(":") ? afterCue.substring(0, afterCue.length() - 1).trim() : afterCue;
+        check("mutter has a topic after the cue", !topic.isEmpty());
 
         WorldContext.TimeOfDay t = WorldContext.timeOfDay(1000L);
         eq("time morning", WorldContext.TimeOfDay.MORNING, WorldContext.timeOfDay(1000L));
