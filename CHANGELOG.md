@@ -2,6 +2,16 @@
 
 ## Unreleased
 
+### Added
+
+- **A "Why doesn't it work?.." guide inside the mod.** A bright yellow button on the Model tab
+  opens a short, paginated walkthrough: install Ollama (Windows, macOS, Linux), start the server,
+  download a model, then check the connection — plus a section on what each failure message means.
+  The settings screen could say *that* the backend was down, but not what to do about it, and the
+  three jobs (install, start, pull a model) each fail differently. The guide sits on an opaque panel
+  so the text stays readable over snow, lava or a bright sky, and pages break at list items rather
+  than mid-sentence. Translated into all nine languages.
+
 ### Fixed
 
 - **Picking a model fills the name field.** Selecting a catalogue model left the old name in the
