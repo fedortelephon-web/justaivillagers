@@ -100,6 +100,12 @@ public final class VillagerSettingsScreen extends Screen {
     /** Line under the Ollama buttons that says where the copied command goes. */
     private int hintY = -1;
 
+    /** Bounds of the help button, so render() can frame it in yellow. */
+    private int helpX = -1;
+    private int helpY = -1;
+    private int helpW;
+    private int helpH;
+
     public VillagerSettingsScreen(Screen parent) {
         super(Text.literal("Just AI Villagers"));
         this.parent = parent;
@@ -188,8 +194,8 @@ public final class VillagerSettingsScreen extends Screen {
     /** How many rows the active tab needs; used only to size rows before laying them out. */
     private int rowCount() {
         if (tab == TAB_MODEL) {
-            // Address, check, five catalogue models, custom id, Ollama helper, two hint lines.
-            return 4 + ModelCatalog.ENTRIES.size() + 3;
+            // Address, check, guide, five catalogue models, custom id, Ollama helper, hint lines.
+            return 5 + ModelCatalog.ENTRIES.size() + 3;
         }
         if (tab == TAB_BEHAVIOUR) {
             return 5 + 4 + 2;
@@ -209,6 +215,7 @@ public final class VillagerSettingsScreen extends Screen {
         int y = contentTop();
         int fieldH = Math.max(12, rowHeight - 2);
         this.hintY = -1;
+        this.helpX = -1;
 
         // Server address. The field is a couple of pixels narrower than the buttons because a text
         // field draws a border inside its box, so at equal widths it looked wider than the rows.
@@ -278,6 +285,23 @@ public final class VillagerSettingsScreen extends Screen {
                 Text.literal(t("settings.model.custom.tip"))));
         addDrawableChild(this.customModelField);
         y += rowHeight;
+
+        // The guide button. Always visible, not only when the backend is down: a player may want to
+        // read ahead before downloading anything, and a button that appears and disappears is hard
+        // to find twice.
+        {
+            ButtonWidget help = ButtonWidget.builder(
+                    Text.literal(t("settings.help")).styled(st -> st.withColor(0xFFD54F).withBold(true)),
+                    b -> openHelp()).dimensions(x, y, w, fieldH).build();
+            help.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                    Text.literal(t("settings.help.tip"))));
+            this.helpX = x;
+            this.helpY = y;
+            this.helpW = w;
+            this.helpH = fieldH;
+            addDrawableChild(help);
+            y += rowHeight;
+        }
 
         // Ollama helper, shown only when the server is unreachable.
         if (health != null && !health.available) {
@@ -434,6 +458,14 @@ public final class VillagerSettingsScreen extends Screen {
         });
     }
 
+
+    /** Opens the setup guide, so the player can go back to the settings afterwards. */
+    private void openHelp() {
+        net.minecraft.client.MinecraftClient client = net.minecraft.client.MinecraftClient.getInstance();
+        if (client != null) {
+            client.setScreen(new HelpScreen(this));
+        }
+    }
 
     /**
      * Puts a string on the system clipboard and tells the player in chat.
@@ -744,6 +776,14 @@ public final class VillagerSettingsScreen extends Screen {
         int w = contentWidth;
 
         if (tab == TAB_MODEL) {
+            // A yellow frame around the guide button. Text colour alone is easy to miss among the
+            // other rows; a border reads as "this is the one to click".
+            if (helpX >= 0) {
+                context.fill(helpX - 1, helpY - 1, helpX + helpW + 1, helpY, 0xFFFFC107);
+                context.fill(helpX - 1, helpY + helpH, helpX + helpW + 1, helpY + helpH + 1, 0xFFFFC107);
+                context.fill(helpX - 1, helpY, helpX, helpY + helpH, 0xFFFFC107);
+                context.fill(helpX + helpW, helpY, helpX + helpW + 1, helpY + helpH, 0xFFFFC107);
+            }
             // The health line sits on the check row, to the right of the button.
             int checkW = Math.min(96, w / 3);
             boolean ok = health != null && health.available;
