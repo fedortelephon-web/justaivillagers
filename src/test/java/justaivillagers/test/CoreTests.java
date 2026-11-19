@@ -31,6 +31,7 @@ import com.justaivillagers.core.Lang;
 import com.justaivillagers.core.LangData;
 import com.justaivillagers.core.LangPack;
 import com.justaivillagers.core.ModelCatalog;
+import com.justaivillagers.core.ModelPuller;
 import com.justaivillagers.core.OllamaInstaller;
 
 /** Dependency-free test harness. Exits non-zero on the first failed expectation. */
@@ -660,6 +661,14 @@ public final class CoreTests {
         eq("token limit is clamped", 512, broken.maxTokens);
         eq("trailing slashes are removed", "http://127.0.0.1:11434", broken.baseUrl);
         eq("null language becomes auto", "", broken.languageOverride);
+
+
+        section("model pull progress");
+
+        // Ollama reports every blob, including 68-byte configs. The puller must ignore small ones or
+        // the progress bar jumps to 100% seconds after the download starts and sits there.
+        check("tiny blobs do not move the bar", !ModelPuller.isLargeBlob(68) && !ModelPuller.isLargeBlob(1482));
+        check("a real weight blob moves the bar", ModelPuller.isLargeBlob(397807936L));
 
         section("installer");
 
