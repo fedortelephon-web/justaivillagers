@@ -1,5 +1,28 @@
 # Changelog
 
+## Unreleased
+
+### Fixed
+
+- **Picking a model fills the name field.** Selecting a catalogue model left the old name in the
+  editable field, because a rebuild deliberately preserves whatever was typed; the picker now
+  writes the chosen id in as well.
+- **The Cancel button appears the moment a download starts.** It was only added on the next
+  rebuild, which happened on the next unrelated click, so an unwanted download looked
+  uncontrollable.
+- **The repeat reminder names the other real cause.** It said Ollama was not running; a wrong
+  server address produces the same silence, and it now says so.
+
+### Changed
+
+- **Chat links copy instead of opening.** Minecraft's open action hands the URL to whatever handler
+  the system registered, which is not always a browser, and its confirmation dialog then leads
+  nowhere. Clicking a link now copies it, and a chat line says where to paste it.
+- **"Open page" is gone, replaced by two copy buttons.** One copies `https://ollama.com/download`,
+  the other copies `ollama serve`, and a short line under them explains that the command goes into
+  PowerShell or cmd (Win+R, `cmd`, Enter). A button that opens nothing is worse than a string the
+  player can paste anywhere.
+
 ## 1.2.0 - a settings screen, and Ollama without a terminal
 
 This is the Minecraft 1.20.1 build of the same release: the feature set is identical to the

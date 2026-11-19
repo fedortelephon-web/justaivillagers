@@ -14,6 +14,9 @@ package com.justaivillagers.core;
 public final class BackendHint {
 
     public static final String OLLAMA_URL = "https://ollama.com/download";
+
+    /** The command that starts the local server, offered as text for the player to paste. */
+    public static final String START_COMMAND = "ollama serve";
     public static final String MODRINTH_URL = "https://modrinth.com/mod/justaivillagers";
 
     private BackendHint() {

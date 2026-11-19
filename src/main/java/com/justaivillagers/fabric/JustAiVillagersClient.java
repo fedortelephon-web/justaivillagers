@@ -152,7 +152,7 @@ public final class JustAiVillagersClient implements ClientModInitializer {
      *
      * <p>Plain text URLs are useless in chat: they cannot be clicked and are cut off by the chat
      * width. Every URL is split out into its own styled component with a click event, so the mod
-     * page and the Ollama download both open with one click.
+     * page and the Ollama download can be copied with one click.
      */
     private static void sendHintLine(MinecraftClient client, String text, int colour) {
         if (client.player == null) {
@@ -178,7 +178,7 @@ public final class JustAiVillagersClient implements ClientModInitializer {
             out.append(Text.literal(url).styled(st -> st
                     .withColor(0x55AAFF)
                     .withUnderline(true)
-                    .withClickEvent(new ClickEvent.OpenUrl(java.net.URI.create(url)))));
+                    .withClickEvent(new ClickEvent.CopyToClipboard(url))));
             last = m.end();
         }
         if (last < text.length()) {
