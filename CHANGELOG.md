@@ -4,10 +4,14 @@
 
 ### Added
 
-- **An in-game settings screen.** Press `O` to open it from anywhere, including the main menu, so a
-  player whose model server is not running yet can fix that before entering a world. Every option in
+- **An in-game settings screen.** Press `O` to open it. Every option in
   `config/justaivillagers.json` is reachable: server address, model, temperature, answer length,
   typing speed, memory length, timeouts, the four feature toggles and the villager language.
+
+  The keybind works while playing, not from the title screen: Minecraft does not deliver keybinds to
+  a screen that is already open, and a config button on the mod list would need ModMenu as an extra
+  dependency. The screen is still reachable before the first villager speaks, because pressing `O`
+  in a new world costs nothing.
 
   Settings are edited on a copy and written only on Save, so Cancel really cancels. Saving rebuilds
   the backend in place — no restart, and the villagers keep their names and the conversation so far
