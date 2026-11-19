@@ -94,6 +94,9 @@ public final class VillagerSettingsScreen extends Screen {
     private LlmBackend.Health health;
     private String statusLine = "";
 
+    /** Model name that was actually probed, so the label cannot claim an untested one. */
+    private String probedModel = "";
+
     public VillagerSettingsScreen(Screen parent) {
         super(Text.literal("Just AI Villagers"));
         this.parent = parent;
@@ -115,6 +118,7 @@ public final class VillagerSettingsScreen extends Screen {
         // The health probe is a network call, but this runs on the game thread only once per screen
         // open with a short timeout; the backend caches it so later opens are instant.
         health = ModRuntime.get().healthNow();
+        probedModel = ModRuntime.get().config().model;
         build();
     }
 
@@ -181,8 +185,8 @@ public final class VillagerSettingsScreen extends Screen {
     /** How many rows the active tab needs; used only to size rows before laying them out. */
     private int rowCount() {
         if (tab == TAB_MODEL) {
-            // Address, check, five catalogue models, custom id.
-            return 3 + ModelCatalog.ENTRIES.size() + 1;
+            // Address, check, five catalogue models, custom id, Ollama helper.
+            return 4 + ModelCatalog.ENTRIES.size() + 1;
         }
         if (tab == TAB_BEHAVIOUR) {
             return 5 + 4 + 2;
@@ -202,21 +206,27 @@ public final class VillagerSettingsScreen extends Screen {
         int y = contentTop();
         int fieldH = Math.max(12, rowHeight - 2);
 
-        // Server address: the label doubles as a caption, so it does not need its own row.
-        this.urlField = new TextFieldWidget(this.textRenderer, x, y, w, fieldH,
+        // Server address. The field is a couple of pixels narrower than the buttons because a text
+        // field draws a border inside its box, so at equal widths it looked wider than the rows.
+        this.urlField = new TextFieldWidget(this.textRenderer, x + 2, y, w - 4, fieldH,
                 Text.literal(t("settings.server")));
         this.urlField.setMaxLength(200);
+        this.urlField.setPlaceholder(Text.literal(t("settings.server.hint")));
         this.urlField.setText(draft.baseUrl);
+        this.urlField.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                Text.literal(t("settings.server.tip"))));
         addDrawableChild(this.urlField);
         y += rowHeight;
 
         // Health line and the recheck button share a row.
         int checkW = Math.min(96, w / 3);
-        addDrawableChild(ButtonWidget.builder(Text.literal(t("settings.check")), b -> {
-            health = ModRuntime.get().healthNow();
-            statusLine = healthLabel();
+        ButtonWidget check = ButtonWidget.builder(Text.literal(t("settings.check")), b -> {
+            probeDraft();
             rebuild();
-        }).dimensions(x, y, checkW, fieldH).build());
+        }).dimensions(x, y, checkW, fieldH).build();
+        check.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                Text.literal(t("settings.check.tip"))));
+        addDrawableChild(check);
         y += rowHeight;
 
         // One row per catalogue entry: select on the left, download on the right.
@@ -231,6 +241,7 @@ public final class VillagerSettingsScreen extends Screen {
                 draft.model = target.id;
                 rebuild();
             }).dimensions(x, y, w - downloadW - 4, fieldH).build();
+            select.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(Text.literal(modelTip(entry))));
             addDrawableChild(select);
 
             boolean isPulling = pullingModel != null && pullingModel.equals(entry.id);
@@ -241,28 +252,66 @@ public final class VillagerSettingsScreen extends Screen {
                     Text.literal(downloadText),
                     b -> startPull(target.id)).dimensions(x + w - downloadW, y, downloadW, fieldH).build();
             download.active = !pullFinished && pullingModel == null;
+            download.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                    Text.literal(t("settings.model.get.tip", entry.id))));
             addDrawableChild(download);
             y += rowHeight;
         }
 
         // Name of the selected model, editable for anything not in the catalogue.
-        this.customModelField = new TextFieldWidget(this.textRenderer, x, y, w, fieldH,
+        this.customModelField = new TextFieldWidget(this.textRenderer, x + 2, y, w - 4, fieldH,
                 Text.literal(t("settings.model.custom")));
         this.customModelField.setMaxLength(120);
+        this.customModelField.setPlaceholder(Text.literal(t("settings.model.custom.hint")));
         this.customModelField.setText(draft.model);
+        this.customModelField.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                Text.literal(t("settings.model.custom.tip"))));
         addDrawableChild(this.customModelField);
         y += rowHeight;
 
-        this.progressY = y;
-
-        // Ollama install helper, shown only when the server is unreachable.
+        // Ollama helper, shown only when the server is unreachable.
         if (health != null && !health.available) {
-            int half = w / 2 - 2;
-            addDrawableChild(ButtonWidget.builder(Text.literal(t("settings.ollama.download")), b -> startInstaller())
-                    .dimensions(x, y, half, fieldH).build());
-            addDrawableChild(ButtonWidget.builder(Text.literal(t("settings.ollama.page")), b -> openPage())
-                    .dimensions(x + w - half, y, half, fieldH).build());
+            int third = (w - 8) / 3;
+            ButtonWidget get = ButtonWidget.builder(
+                    Text.literal(t("settings.ollama.download")), b -> startInstaller())
+                    .dimensions(x, y, third, fieldH).build();
+            get.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                    Text.literal(t("settings.ollama.download.tip"))));
+            addDrawableChild(get);
+
+            ButtonWidget page = ButtonWidget.builder(
+                    Text.literal(t("settings.ollama.page")), b -> openPage())
+                    .dimensions(x + third + 4, y, third, fieldH).build();
+            page.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                    Text.literal(com.justaivillagers.core.BackendHint.OLLAMA_URL)));
+            addDrawableChild(page);
+
+            // While a download runs the third slot cancels it, so a stuck or unwanted installer does
+            // not leave the player waiting for a file they no longer want.
+            if (installer != null) {
+                ButtonWidget cancel = ButtonWidget.builder(
+                        Text.literal(t("settings.cancel")), b -> cancelInstaller())
+                        .dimensions(x + 2 * (third + 4), y, third, fieldH).build();
+                addDrawableChild(cancel);
+            }
+            y += rowHeight;
         }
+
+        // Everything below this point is painted text and bars, never widgets, so it starts under
+        // the last button instead of sharing its line.
+        this.progressY = y;
+    }
+
+    /** A one-line description of a catalogue model, for the row's tooltip. */
+    private String modelTip(ModelCatalog.Entry entry) {
+        String base = t("settings.model.tip", entry.label(), ModelCatalog.sizeLabel(entry),
+                ModelCatalog.ramLabel(entry));
+        String extra = t("settings.model.tip." + entry.id.replace(':', '_').replace('.', '_').replace('-', '_'));
+        // A missing translation comes back as its own key; only append a real sentence.
+        if (extra == null || extra.isBlank() || extra.startsWith("settings.model.tip.")) {
+            return base;
+        }
+        return base + "\n" + extra;
     }
 
     private void startPull(String model) {
@@ -346,15 +395,86 @@ public final class VillagerSettingsScreen extends Screen {
         });
     }
 
+    /**
+     * Opens the Ollama download page in the system browser.
+     *
+     * <p>Two attempts, because neither works everywhere: Minecraft's own opener is the polite path,
+     * and the platform command is the fallback for a JVM where it silently refuses. Every outcome is
+     * logged, so "the button does nothing" becomes a line in the log instead of a mystery.
+     */
     private void openPage() {
+        String url = com.justaivillagers.core.BackendHint.OLLAMA_URL;
+        boolean opened = false;
         try {
-            if (java.awt.Desktop.isDesktopSupported()) {
-                java.awt.Desktop.getDesktop().browse(java.net.URI.create(OllamaInstaller.DOWNLOAD_PAGE));
+            net.minecraft.util.Util.getOperatingSystem().open(java.net.URI.create(url));
+            opened = true;
+            ModRuntime.LOGGER.info("Opened {} via Minecraft", url);
+        } catch (Exception | Error e) {
+            ModRuntime.LOGGER.warn("Minecraft could not open {}: {}", url, e.toString());
+        }
+        if (opened) {
+            return;
+        }
+        try {
+            String os = System.getProperty("os.name", "").toLowerCase(java.util.Locale.ROOT);
+            ProcessBuilder pb;
+            if (os.contains("win")) {
+                pb = new ProcessBuilder("rundll32", "url.dll,FileProtocolHandler", url);
+            } else if (os.contains("mac")) {
+                pb = new ProcessBuilder("open", url);
+            } else {
+                pb = new ProcessBuilder("xdg-open", url);
+            }
+            pb.start();
+            ModRuntime.LOGGER.info("Opened {} via the platform command", url);
+        } catch (Exception | Error e) {
+            // Last resort: put the address where the player can copy it.
+            ModRuntime.LOGGER.warn("Could not open a browser for {}: {}", url, e.toString());
+            if (client != null && client.player != null) {
+                client.player.sendMessage(net.minecraft.text.Text.literal("§8[justaivillagers] §e" + url), false);
+            }
+        }
+    }
+
+    /** Stops an installer download that is still running. */
+    private void cancelInstaller() {
+        if (installer != null) {
+            installer.cancel();
+            installer = null;
+            installerError = "";
+            installerSaved = null;
+            needsRebuild = true;
+        }
+    }
+
+    /**
+     * Probes the address and model currently on screen, not the saved ones.
+     *
+     * <p>This is the whole point of the button: a player who has just pasted a different address or
+     * clicked another model expects Check to test that, and it looks broken when it silently tests
+     * yesterday's settings instead.
+     */
+    private void probeDraft() {
+        ModConfig probe = draft.copy();
+        if (urlField != null && !urlField.getText().isBlank()) {
+            probe.baseUrl = urlField.getText().trim();
+        }
+        if (customModelField != null && !customModelField.getText().isBlank()) {
+            probe.model = customModelField.getText().trim();
+        }
+        probe.sanitize();
+        this.probedModel = probe.model;
+        try {
+            if ("openai".equals(probe.provider)) {
+                this.health = new com.justaivillagers.core.OpenAiBackend(probe, ModRuntime.LOGGER).health();
+            } else {
+                this.health = new com.justaivillagers.core.OllamaBackend(probe, ModRuntime.LOGGER).health(true);
             }
         } catch (Exception | Error e) {
-            // A browser we cannot open is not worth a crash; the URL is also printed to the log.
-            ModRuntime.LOGGER.info("Open {} in a browser", OllamaInstaller.DOWNLOAD_PAGE);
+            this.health = com.justaivillagers.core.LlmBackend.Health.down(e.toString());
+            ModRuntime.LOGGER.warn("Health probe failed: {}", e.toString());
         }
+        this.statusLine = healthLabel();
     }
 
     private String healthLabel() {
@@ -362,7 +482,14 @@ public final class VillagerSettingsScreen extends Screen {
             return t("settings.status.down");
         }
         if (health.available) {
-            return t("settings.status.ok", draft.model);
+            // Name the model that was probed, never one that merely happens to be selected.
+            String model = probedModel.isEmpty() ? draft.model : probedModel;
+            return t("settings.status.ok", model);
+        }
+        String detail = health.detail == null ? "" : health.detail;
+        if (detail.contains("not installed")) {
+            String model = probedModel.isEmpty() ? draft.model : probedModel;
+            return t("settings.status.nomodel", model);
         }
         return t("settings.status.down");
     }
@@ -497,14 +624,14 @@ public final class VillagerSettingsScreen extends Screen {
     private static String nameOf(String code) {
         switch (code) {
             case Lang.EN: return "English";
-            case Lang.RU: return "Р СѓСЃСЃРєРёР№";
-            case Lang.ES: return "EspaГ±ol";
-            case Lang.PT: return "PortuguГЄs";
+            case Lang.RU: return "Русский";
+            case Lang.ES: return "Español";
+            case Lang.PT: return "Português";
             case Lang.DE: return "Deutsch";
             case Lang.PL: return "Polski";
-            case Lang.FR: return "FranГ§ais";
+            case Lang.FR: return "Français";
             case Lang.IT: return "Italiano";
-            case Lang.TR: return "TГјrkГ§e";
+            case Lang.TR: return "Türkçe";
             default: return code;
         }
     }
@@ -611,34 +738,58 @@ public final class VillagerSettingsScreen extends Screen {
                     x + checkW + 6, contentTop() + rowHeight + 4, ok ? 0x55FF55 : 0xFF5555);
 
             int lineY = progressY;
+            int limit = this.height - BOTTOM_BAR;
+
+            // Model download: one caption, one bar, then four pixels of breathing room.
             if (pullingModel != null) {
-                float progress = pullTotal > 0 ? (float) pullDone / (float) pullTotal : 0f;
+                boolean known = pullTotal > 0;
+                float progress = known ? (float) pullDone / (float) pullTotal : -1f;
                 // A model can be several blobs, so the percentage legitimately restarts; the status
-                // text says which phase is running so the bar does not look stuck or broken.
-                String text = t("settings.model.downloading", percent(progress));
+                // text says which phase is running so the bar does not look stuck or broken. Some
+                // phases report no total at all, hence the sweep and the dots.
+                String text = known
+                        ? t("settings.model.downloading", percent(progress))
+                        : t("settings.model.downloading", animatedDots());
                 if (!pullStatus.isEmpty()) {
                     text = text + "  " + pullStatus;
                 }
-                context.drawTextWithShadow(this.textRenderer, Text.literal(trim(text)), x, lineY, 0xFFFFFF);
+                drawLine(context, text, x, lineY, w, 0xFFFFFF, limit);
                 drawBar(context, x, lineY + 10, w, progress);
+                lineY += 18;
             } else if (!pullStatus.isEmpty()) {
-                context.drawTextWithShadow(this.textRenderer, Text.literal(trim(pullStatus)), x, lineY, 0xFFAA00);
+                // Nothing is downloading but a phase message is still set: that is a finished or
+                // failed step, so show the dots too rather than a sentence that never changes.
+                drawLine(context, pullStatus + animatedDots(), x, lineY, w, 0xFFAA00, limit);
+                lineY += 12;
             }
 
+            // Ollama installer: same treatment, on its own lines.
             if (installer != null) {
-                float progress = installerTotal > 0 ? (float) installerDone / (float) installerTotal : 0f;
-                context.drawTextWithShadow(this.textRenderer,
-                        Text.literal(t("settings.model.downloading", percent(progress))), x, lineY + 22, 0xFFFFFF);
-                drawBar(context, x, lineY + 32, w, progress);
+                boolean known = installerTotal > 0;
+                float progress = known ? (float) installerDone / (float) installerTotal : -1f;
+                drawLine(context, t("settings.model.downloading",
+                                known ? percent(progress) : animatedDots()),
+                        x, lineY, w, 0xFFFFFF, limit);
+                drawBar(context, x, lineY + 10, w, progress);
             } else if (installerSaved != null) {
-                context.drawTextWithShadow(this.textRenderer,
-                        Text.literal(trim(t("settings.ollama.saved", installerSaved.getFileName().toString()))),
-                        x, lineY + 22, 0x55FF55);
+                drawLine(context, t("settings.ollama.saved", installerSaved.getFileName().toString()),
+                        x, lineY, w, 0x55FF55, limit);
             } else if (!installerError.isEmpty()) {
-                context.drawTextWithShadow(this.textRenderer, Text.literal(trim(installerError)),
-                        x, lineY + 22, 0xFF5555);
+                drawLine(context, installerError, x, lineY, w, 0xFF5555, limit);
             }
         }
+    }
+
+    /** Draws one line of status text, trimmed to the content width and never off the bottom. */
+    private void drawLine(DrawContext context, String text, int x, int y, int w, int colour, int limit) {
+        if (y + 9 > limit) {
+            return;
+        }
+        // Buttons draw their border inside their box, so text starting exactly at the widget x looks
+        // indented one or two pixels to the left of them. Nudge it to line up with the button labels.
+        int indent = 4;
+        context.drawTextWithShadow(this.textRenderer,
+                Text.literal(this.textRenderer.trimToWidth(text, w - indent)), x + indent, y, colour);
     }
 
     /** The health text has to fit beside the check button, so it is cut to the space left. */
@@ -649,10 +800,32 @@ public final class VillagerSettingsScreen extends Screen {
         return s.length() <= maxChars ? s : s.substring(0, Math.max(1, maxChars - 1)) + "вЂ¦";
     }
 
+    /**
+     * Draws the progress bar. A negative value means the step has no known total, so the bar shows a
+     * segment sweeping across instead of sitting empty, which is what an unknown progress looks like
+     * to a player otherwise: frozen.
+     */
     private void drawBar(DrawContext context, int x, int y, int width, float progress) {
         context.fill(x, y, x + width, y + 5, 0xFF000000);
+        if (progress < 0f) {
+            // One fifth of the width, bouncing left to right and back.
+            int segment = Math.max(12, width / 5);
+            int span = Math.max(1, width - segment);
+            float phase = (System.currentTimeMillis() % 1400L) / 1400f;
+            // Triangle wave: 0 -> 1 -> 0, so the sweep is continuous rather than restarting.
+            float t = phase < 0.5f ? phase * 2f : (1f - phase) * 2f;
+            int start = x + (int) (span * t);
+            context.fill(start, y, start + segment, y + 5, 0xFF55FF55);
+            return;
+        }
         int filled = (int) (width * Math.max(0f, Math.min(1f, progress)));
         context.fill(x, y, x + filled, y + 5, 0xFF55FF55);
+    }
+
+    /** "..." that grows and shrinks, so a phase with no percentage still looks alive. */
+    private static String animatedDots() {
+        int frame = (int) ((System.currentTimeMillis() / 450L) % 4L);
+        return ".".repeat(frame);
     }
 
     private static String percent(float value) {
