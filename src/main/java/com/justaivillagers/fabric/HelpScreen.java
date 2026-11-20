@@ -38,6 +38,7 @@ public final class HelpScreen extends Screen {
 
     private static final int LINE = 10;
     private static final int PANEL_TOP = 24;
+    private static final int TEXT_TOP = PANEL_TOP + 22;
 
     private final Screen parent;
 
@@ -61,6 +62,10 @@ public final class HelpScreen extends Screen {
             this.text = text;
             this.colour = colour;
             this.indent = indent;
+        }
+
+        private boolean isBlank() {
+            return this.text.toString().isEmpty();
         }
     }
 
@@ -103,7 +108,7 @@ public final class HelpScreen extends Screen {
         addDrawableChild(close);
     }
 
-    /** Changes page and refreshes the buttons' enabled state without losing scroll position. */
+    /** Changes page and refreshes the buttons' enabled state without rebuilding the text. */
     private void turn(int delta) {
         int target = page + delta;
         if (target < 0 || target >= pageCount()) {
@@ -174,8 +179,7 @@ public final class HelpScreen extends Screen {
 
     /** Rows that fit between the panel top and the page counter. */
     private int maxLinesPerPage() {
-        int panelBottomLimit = this.height - COUNTER_SPACE;
-        int available = panelBottomLimit - (PANEL_TOP + 28);
+        int available = this.height - COUNTER_SPACE - TEXT_TOP;
         return Math.max(3, available / LINE);
     }
 
@@ -212,12 +216,12 @@ public final class HelpScreen extends Screen {
                     if (point > limit) {
                         break;
                     }
-                    if (point >= start + target || best < 0) {
-                        best = point;
-                    }
                     if (point >= start + target) {
+                        best = point;
                         break;
                     }
+                    // Remember the furthest break so far, in case none reaches the target.
+                    best = point;
                 }
                 if (best <= start) {
                     best = limit;
@@ -242,9 +246,23 @@ public final class HelpScreen extends Screen {
 
         int cx = this.width / 2;
         int x = cx - contentWidth() / 2;
-        int per = maxLinesPerPage();
-        int textTop = PANEL_TOP + 22;
-        int panelBottom = textTop + per * LINE + 6;
+
+        int start = pageStarts().get(Math.min(page, pageCount() - 1));
+        // A section gap is a blank row; a page that opens with one wastes the row and reads as a
+        // margin bug, so skip any leading gaps.
+        while (start < lines.size() && lines.get(start).isBlank()) {
+            start++;
+        }
+        int end = Math.min(lines.size(), start + maxLinesPerPage());
+        // Trailing gaps would leave the panel taller than its text, so trim them for measuring.
+        int drawnEnd = end;
+        while (drawnEnd > start && lines.get(drawnEnd - 1).isBlank()) {
+            drawnEnd--;
+        }
+
+        // The panel hugs its text. On a large window a page may hold a third of the rows that fit,
+        // and a box sized for the maximum leaves a tall empty void that reads as a rendering bug.
+        int panelBottom = TEXT_TOP + Math.max(1, drawnEnd - start) * LINE + 8;
 
         // Opaque panel: light grey text over a snowy hill is otherwise invisible.
         context.fill(x - 12, PANEL_TOP, x + contentWidth() + 12, panelBottom, 0xF4121418);
@@ -252,22 +270,15 @@ public final class HelpScreen extends Screen {
         context.fill(x - 12, PANEL_TOP, x + contentWidth() + 12, PANEL_TOP + 1, 0xFFFFC107);
         context.fill(x - 12, panelBottom - 1, x + contentWidth() + 12, panelBottom, 0xFFFFC107);
         // A darker strip behind the title, so it does not collide with the world above the panel.
-        context.fill(x - 12, PANEL_TOP + 1, x + contentWidth() + 12, textTop - 4, 0xFF1B1D22);
+        context.fill(x - 12, PANEL_TOP + 1, x + contentWidth() + 12, TEXT_TOP - 4, 0xFF1B1D22);
 
         context.drawCenteredTextWithShadow(this.textRenderer,
                 Text.literal(t("help.title")), cx, PANEL_TOP + 7, 0xFFD54F);
 
-        int start = pageStarts().get(Math.min(page, pageCount() - 1));
-        // A section gap is a blank row; a page that opens with one wastes the row and reads as a
-        // margin bug, so skip any leading gaps.
-        while (start < lines.size() && lines.get(start).text.toString().isEmpty()) {
-            start++;
-        }
-        int end = Math.min(lines.size(), start + per);
-        int y = textTop;
+        int y = TEXT_TOP;
         for (int i = start; i < end; i++) {
             Line line = lines.get(i);
-            if (line.text.toString().isEmpty()) {
+            if (line.isBlank()) {
                 y += LINE;
                 continue;
             }
