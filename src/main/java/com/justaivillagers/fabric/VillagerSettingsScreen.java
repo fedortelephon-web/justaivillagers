@@ -303,45 +303,6 @@ public final class VillagerSettingsScreen extends Screen {
             y += rowHeight;
         }
 
-        // Ollama helper, shown only when the server is unreachable.
-        if (health != null && !health.available) {
-            int third = (w - 8) / 3;
-            ButtonWidget get = ButtonWidget.builder(
-                    Text.literal(t("settings.ollama.download")), b -> startInstaller())
-                    .dimensions(x, y, third, fieldH).build();
-            get.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
-                    Text.literal(t("settings.ollama.download.tip"))));
-            addDrawableChild(get);
-
-            // Copying beats opening a browser: the mod cannot know which browser the player uses,
-            // and on this machine the system handler for https is not a browser at all. A string on
-            // the clipboard works everywhere.
-            ButtonWidget copyLink = ButtonWidget.builder(
-                    Text.literal(t("settings.ollama.copy")), b -> copyToClipboard(
-                            com.justaivillagers.core.BackendHint.OLLAMA_URL,
-                            t("settings.ollama.copied")))
-                    .dimensions(x + third + 4, y, third, fieldH).build();
-            copyLink.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
-                    Text.literal(com.justaivillagers.core.BackendHint.OLLAMA_URL)));
-            addDrawableChild(copyLink);
-
-            ButtonWidget copyCmd = ButtonWidget.builder(
-                    Text.literal(t("settings.ollama.command.copy")), b -> copyToClipboard(
-                            com.justaivillagers.core.BackendHint.START_COMMAND,
-                            t("settings.ollama.command.copied")))
-                    .dimensions(x + 2 * (third + 4), y, third, fieldH).build();
-            copyCmd.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
-                    Text.literal(t("settings.ollama.command.tip"))));
-            addDrawableChild(copyCmd);
-            y += rowHeight;
-
-            // The command is useless if the player does not know where it goes, and "PowerShell or
-            // cmd" is not obvious to someone who has never opened one.
-            if (installer == null) {
-                this.hintY = y;
-            }
-        }
-
         // Cancelling is available from the first moment of the download, on its own full-width row
         // so it is impossible to miss.
         if (installer != null) {
@@ -575,10 +536,13 @@ public final class VillagerSettingsScreen extends Screen {
     private int toggle(int x, int y, int w, int h, String key, Supplier<Boolean> get,
             Consumer<Boolean> set) {
         String mark = get.get() ? "[x] " : "[ ] ";
-        addDrawableChild(ButtonWidget.builder(Text.literal(mark + t(key)), b -> {
+        ButtonWidget button = ButtonWidget.builder(Text.literal(mark + t(key)), b -> {
             set.accept(!get.get());
             rebuild();
-        }).dimensions(x, y, w, h).build());
+        }).dimensions(x, y, w, h).build();
+        button.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                Text.literal(t(key + ".tip"))));
+        addDrawableChild(button);
         return y + rowHeight;
     }
 
@@ -586,11 +550,14 @@ public final class VillagerSettingsScreen extends Screen {
     private int slider(int x, int y, int w, int h, String key, Supplier<Double> get,
             Consumer<Double> set, double min, double max, int decimals) {
         final String label = t(key);
-        addDrawableChild(new ValueSlider(x, y, w, h, label, get.get(), min, max, decimals, set,
+        ValueSlider widget = new ValueSlider(x, y, w, h, label, get.get(), min, max, decimals, set,
                 () -> {
                     // Rebuild so the widget picks up the new value from the supplier.
                     rebuild();
-                }));
+                });
+        widget.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                Text.literal(t(key + ".tip"))));
+        addDrawableChild(widget);
         return y + rowHeight;
     }
 
@@ -608,6 +575,8 @@ public final class VillagerSettingsScreen extends Screen {
             capturingKey = which;
             rebuild();
         }).dimensions(x, y, w, h).build();
+        button.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
+                Text.literal(t(key + ".tip"))));
         addDrawableChild(button);
         return y + rowHeight;
     }
@@ -793,13 +762,6 @@ public final class VillagerSettingsScreen extends Screen {
             int lineY = progressY;
             int limit = this.height - BOTTOM_BAR;
 
-            // Where to paste the copied command. Two short lines rather than one long one, because
-            // the full sentence does not fit at the default window width.
-            if (health != null && !health.available && installer == null && hintY >= 0) {
-                drawWrapped(context, t("settings.ollama.paste.hint"), x, hintY, w, 0xAAAAAA, limit);
-                lineY = Math.max(lineY, hintY + 20);
-            }
-
             // Model download: one caption, one bar, then four pixels of breathing room.
             if (pullingModel != null) {
                 boolean known = pullTotal > 0;
@@ -871,7 +833,7 @@ public final class VillagerSettingsScreen extends Screen {
         int checkW = Math.min(96, contentWidth / 3);
         int room = Math.max(24, contentWidth - checkW - 10);
         int maxChars = Math.max(6, room / 6);
-        return s.length() <= maxChars ? s : s.substring(0, Math.max(1, maxChars - 1)) + "вЂ¦";
+        return s.length() <= maxChars ? s : s.substring(0, Math.max(1, maxChars - 1)) + "…";
     }
 
     /**
@@ -907,7 +869,7 @@ public final class VillagerSettingsScreen extends Screen {
     }
 
     private static String trim(String s) {
-        return s.length() <= 60 ? s : s.substring(0, 59) + "вЂ¦";
+        return s.length() <= 60 ? s : s.substring(0, 59) + "…";
     }
 
     @Override
