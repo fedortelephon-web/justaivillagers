@@ -4,6 +4,13 @@
 
 ### Added
 
+- **The Model tab no longer offers the Ollama helper.** Three buttons saying Download Ollama,
+  Copy link and Copy command, plus a paragraph explaining where to paste it, were crowding the tab
+  for a job the guide screen now does properly. The guide button stays where it was.
+- **Every control on the Behaviour tab explains itself on hover.** Toggles, sliders and both keybind
+  rows now carry a one-line tooltip saying what the setting changes and what turning it down does,
+  in all nine languages; previously only the Model tab had them.
+
 - **A "Why doesn't it work?.." guide inside the mod.** A bright yellow button on the Model tab
   opens a short, paginated walkthrough: install Ollama (Windows, macOS, Linux), start the server,
   download a model, then check the connection — plus a section on what each failure message means.
