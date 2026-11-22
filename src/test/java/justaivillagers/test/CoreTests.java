@@ -107,8 +107,8 @@ public final class CoreTests {
         eq("lang normalise unknown", "en", Names.normalise("ja_jp"));
         eq("lang normalise null", "en", Names.normalise(null));
 
-        // Every supported language must have a complete pack. A missing key used to be invisible
-        // until a player set that language and the prompt came out with a raw key in it.
+        // Every supported language must have a complete pack. A missing key is otherwise invisible
+        // until a player sets that language and the prompt comes out with a raw key in it.
         section("language packs");
         LangPack en = LangData.of(Lang.EN);
         for (String code : Lang.ALL) {
@@ -286,8 +286,8 @@ public final class CoreTests {
         check("russian trade block reaches the prompt", ruMason.contains("каменный кирпич"));
         check("a profession without a trade still gets a block", !LangData.of("en").trade("nitwit").isBlank());
 
-        // The stutter example used to be a ready-made greeting ("К-как д-дела?"), which the model
-        // echoed as the opening of every single line instead of writing its own text.
+        // The stutter example must not be a ready-made greeting ("К-как д-дела?"), which the model
+        // would echo as the opening of every single line instead of writing its own text.
         VillagerProfile stutterer = new VillagerProfile(java.util.UUID.randomUUID(), "Тест", "grumpy",
                 VillagerProfile.SpeechStyle.CASUAL, true, false, VillagerProfile.ChildKind.NONE);
         String stutterPrompt = PromptBuilder.reply(config, "ru", stutterer, ctx, "Привет", history, null).userPrompt;
