@@ -4,6 +4,16 @@
 
 ### Added
 
+- **Commands.** `/justaivillagers status`, `settings`, `reload` and `help` (bare command prints the
+  list). `status` names the address, the model, whether that model is downloaded and any download
+  in progress; `settings` opens the same screen as **O**; `reload` re-reads the config file without
+  rejoining. On world join the mod now prints the settings key and the command hint once.
+- **The prompt debug toggle writes to chat.** Renamed "Write prompts to chat": pressing Enter on a
+  line echoes exactly that line, which is what a player needs to see when a reply comes out wrong.
+  The full assembled prompt still goes to the log for bug reports.
+- **Chat shows your own line.** Talking to a villager added your question to the dialog window but
+  not to chat, so the chat copy showed answers to questions it had never asked.
+
 - **The Model tab no longer offers the Ollama helper.** Three buttons saying Download Ollama,
   Copy link and Copy command, plus a paragraph explaining where to paste it, were crowding the tab
   for a job the guide screen now does properly. The guide button stays where it was.
@@ -20,6 +30,25 @@
   than mid-sentence. Translated into all nine languages.
 
 ### Fixed
+
+- **The mod page link pointed at a project that does not exist.** The metadata and the chat hint
+  used `modrinth.com/mod/justaivillagers`; the published project is `just-ai-villagers`, so the link
+  404'd for anyone who clicked it.
+- **The README contradicted the licence.** It said "all rights reserved" while `LICENSE` and
+  `fabric.mod.json` say MIT.
+
+- **A scared villager names the monster that is actually there.** The flee prompt was built with no
+  mob name and the model filled the gap with whatever it liked, so a villager standing next to a
+  zombie kept shouting about a skeleton. The closest hostile mob's translated name now goes into
+  the prompt and into the canned fallback lines.
+- **A dead villager stops talking.** An evening conversation between two villagers carried on after
+  one of them was killed, with the dead one still taking turns. The exchange now checks that both
+  speakers are alive before every line.
+- **A fatal hit is not answered.** The reaction was queued from the attack callback, which runs
+  before damage is applied, so a killing blow still produced a line from a villager who was already
+  dead. Hits are held for one tick and dropped if the villager did not survive.
+- **Switching the game language renames the villagers.** Profiles were cached by UUID only, so the
+  name and character stayed in the old language for the rest of the session.
 
 - **Picking a model fills the name field.** Selecting a catalogue model left the old name in the
   editable field, because a rebuild deliberately preserves whatever was typed; the picker now

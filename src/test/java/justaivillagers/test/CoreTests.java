@@ -153,6 +153,19 @@ public final class CoreTests {
             check("pack " + code + " has a trade block for every profession: " + missingTrades,
                     missingTrades.isEmpty());
         }
+        // A shouted line reaches every nearby villager as its own request, so the chat echo must not
+        // repeat the same text. A short window covers exactly that burst.
+        java.util.List<String> echoed = new java.util.ArrayList<>();
+        com.justaivillagers.core.DebugChat.setSink(echoed::add);
+        for (int i = 0; i < 4; i++) {
+            com.justaivillagers.core.DebugChat.emit("hello there");
+        }
+        eq("chat echo collapses duplicates", 1, echoed.size());
+        com.justaivillagers.core.DebugChat.emit("something else");
+        eq("chat echo keeps new lines", 2, echoed.size());
+        com.justaivillagers.core.DebugChat.setSink(null);
+        check("chat echo silent when unset", !com.justaivillagers.core.DebugChat.active());
+
         eq("all languages registered", 9, LangData.count());
         VillagerProfile.Cache cache = new VillagerProfile.Cache();
         UUID id = UUID.randomUUID();
@@ -161,6 +174,11 @@ public final class CoreTests {
         eq("profile stable", a.name, b.name);
         eq("profile personality stable", a.personality, b.personality);
         check("profile name non-empty", !a.name.isBlank());
+        // Switching the client language must re-draw the name and character instead of keeping the
+        // cached ones; the word pools are per-language, so a Russian profile used to survive into an
+        // English client. Checked by cache size, because the pools could in principle collide.
+        cache.get(id, false, "en");
+        check("profile cached per language", cache.size() >= 2);
 
         // Names must be a pure function of the UUID. An earlier "fix" consulted the cache to avoid
         // duplicates, which made the name depend on the order villagers loaded and renamed them
@@ -238,6 +256,15 @@ public final class CoreTests {
         check("en prompt has biome", enReply.contains("plains"));
         check("en prompt has player line", enReply.contains("Hello"));
         check("en prompt indoor", enReply.contains("inside a house"));
+        // The chat echo must be the player's line alone, not the assembled prompt: that was the
+        // whole point of keeping playerLine apart from userPrompt.
+        com.justaivillagers.core.LlmRequest replyRequest =
+                PromptBuilder.reply(config, "en", a, ctx, "Hello", history, null);
+        eq("reply echoes player line", "Hello", replyRequest.playerLine);
+        check("reply player line excludes context", !replyRequest.playerLine.contains(a.name));
+        eq("spontaneous has no player line", "",
+                PromptBuilder.spontaneous(config, "en", a, ctx, history, null).playerLine);
+
         String ruReply = PromptBuilder.reply(config, "ru", a, ctx, "Привет", history, null).userPrompt;
         check("ru prompt has player line", ruReply.contains("Привет"));
         check("ru prompt has weather", ruReply.contains("дождь"));
@@ -468,7 +495,7 @@ public final class CoreTests {
         fake.mode(FakeServer.Mode.OK);
         CountDownLatch groupLatch = new CountDownLatch(3);
         VillagerProfile other = service.profiles().get(UUID.randomUUID(), false, "en");
-        service.runGroupDialogue("en", profile, other, ctx, 3, line -> groupLatch.countDown());
+        service.runGroupDialogue("en", profile, other, ctx, 3, line -> groupLatch.countDown(), () -> true);
         check("group lines delivered", groupLatch.await(20, TimeUnit.SECONDS));
         // Flag must clear even if something goes wrong; wait for the worker to finish.
         long deadline = System.currentTimeMillis() + 5000;
@@ -480,7 +507,18 @@ public final class CoreTests {
         section("group dialogue with dead backend");
         fake.mode(FakeServer.Mode.DOWN);
         CountDownLatch deadLatch = new CountDownLatch(2);
-        service.runGroupDialogue("en", profile, other, ctx, 2, line -> deadLatch.countDown());
+        // A speaker that disappears must cut the exchange short instead of finishing the script.
+        section("group dialogue stops when a speaker dies");
+        CountDownLatch goneLatch = new CountDownLatch(1);
+        service.runGroupDialogue("en", profile, other, ctx, 4, line -> goneLatch.countDown(), () -> false);
+        check("dead speaker delivers nothing", !goneLatch.await(3, TimeUnit.SECONDS));
+        long stopDeadline = System.currentTimeMillis() + 5000;
+        while (service.isGroupDialogueRunning() && System.currentTimeMillis() < stopDeadline) {
+            Thread.sleep(50);
+        }
+        check("group flag cleared after death", !service.isGroupDialogueRunning());
+
+        service.runGroupDialogue("en", profile, other, ctx, 2, line -> deadLatch.countDown(), () -> true);
         check("group fallback delivered", deadLatch.await(20, TimeUnit.SECONDS));
         deadline = System.currentTimeMillis() + 5000;
         while (service.isGroupDialogueRunning() && System.currentTimeMillis() < deadline) {

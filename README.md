@@ -68,12 +68,26 @@ Edit it and rejoin a world to apply — the file is re-read on world join.
 | `enableEventReactions` | `true` | Reactions to hits and monsters |
 | `enableFallbackLines` | `true` | Canned lines when the backend is down |
 | `languageOverride` | `""` | Force a language (`en`, `tr`, `es`, `pt`, `de`, `pl`, `fr`, `it`, `ru`). Empty means follow the game language |
-| `debugPrompts` | `false` | Log full prompts |
+| `debugPrompts` | `false` | Echo your own request to chat and log the full prompt (`/justaivillagers status` shows the current state) |
 
 Lines are paced by `length × speechPaceMsPerChar`, clamped to the min/max above. The model answers
 much faster than a person talks, so without pacing a whole evening dialogue lands in chat at once.
 
 Out-of-range values are clamped on load instead of crashing the game.
+
+## Commands
+
+All of them work in single player and on a server, because the mod runs on the client:
+
+| Command | What it does |
+| --- | --- |
+| `/justaivillagers` or `/justaivillagers help` | List the commands |
+| `/justaivillagers status` | Server address, model, whether it is downloaded, and any download in progress |
+| `/justaivillagers settings` | Open the settings screen (same as pressing **O**) |
+| `/justaivillagers reload` | Re-read `config/justaivillagers.json` without rejoining |
+
+On world join the mod prints the settings key and the command hint once, so the controls are
+discoverable without reading this file.
 
 ## Build from source
 
@@ -94,4 +108,4 @@ The jar appears in `build\libs\`. Requires JDK 21+; Gradle is downloaded by the 
 
 ## License
 
-All rights reserved. See `LICENSE`.
+MIT. See `LICENSE`.
