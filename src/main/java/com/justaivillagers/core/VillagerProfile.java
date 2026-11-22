@@ -118,7 +118,7 @@ public final class VillagerProfile {
 
         private VillagerProfile create(UUID id, boolean child, String lang) {
             // Derive everything from the UUID so the same villager is the same person after a restart.
-            // Deliberately NOT influenced by load order or by which other villagers are cached: an
+            // Not influenced by load order or by which other villagers are cached: an
             // earlier attempt to avoid duplicates by consulting the cache renamed villagers between
             // sessions, because the cache is empty on startup and fills in a different order.
             long seed = id.getMostSignificantBits() ^ id.getLeastSignificantBits();

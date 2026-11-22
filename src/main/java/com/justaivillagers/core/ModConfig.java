@@ -1,11 +1,9 @@
 package com.justaivillagers.core;
 
 /**
- * User-editable settings. Written to {@code config/justaivillagers.json} on first launch and
- * re-read on every world join.
- *
- * <p>Everything that used to be hardcoded in the original build lives here now: endpoint, model,
- * temperature, token limit, keep-alive, timeouts, history size and the feature toggles.
+ * User-editable settings, written to {@code config/justaivillagers.json} on first launch and
+ * re-read on every world join: endpoint, model, temperature, token limit, keep-alive, timeouts,
+ * history size and the feature toggles.
  */
 public final class ModConfig {
 
@@ -76,11 +74,9 @@ public final class ModConfig {
     public boolean enableEventReactions = true;
 
     /**
-     * How long a villager stays quiet after reacting to a hit, in milliseconds.
-     *
-     * <p>Punching a villager repeatedly used to send one request per punch, so a player could spam a
-     * local LLM with hits faster than it could answer. This only gates the hit reaction; talking to
-     * the villager is never blocked by it.
+     * How long a villager stays quiet after reacting to a hit, in milliseconds. Without it one
+     * request goes out per punch and a player can outrun a local LLM. Only gates hit reactions;
+     * talking is never blocked.
      */
     public int hurtCooldownMs = 4000;
 

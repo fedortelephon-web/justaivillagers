@@ -11,9 +11,9 @@ import java.util.concurrent.ConcurrentHashMap;
 /**
  * Per-villager conversation memory.
  *
- * <p>Fixes three problems of the original: the {@code HashMap} was written from both the game thread
- * and an async worker (a real corruption risk), the history grew unbounded within its TTL, and NPC
- * state was never evicted for unloaded villagers.
+ * <p>Backed by a {@link ConcurrentHashMap} because reads happen on the game thread while writes come
+ * from async workers. Each history is capped at {@code maxMessages} and expires after its TTL, and
+ * entries for unloaded villagers are evicted.
  */
 public final class DialogueHistory {
 
