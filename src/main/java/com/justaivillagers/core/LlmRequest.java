@@ -28,4 +28,14 @@ public final class LlmRequest {
 
     /** Optional pre-built chat history, used by the OpenAI-compatible provider. */
     public List<ChatTurn> history = List.of();
+
+    /**
+     * The player's own words, when this request answers something they typed.
+     *
+     * <p>Kept apart from {@link #userPrompt} on purpose: the user prompt is the whole assembled
+     * block (personality, time of day, trade, history, the question), and echoing that into chat
+     * buries the one thing the player wanted to see. Empty for unprompted lines and reactions,
+     * which have no player request behind them.
+     */
+    public String playerLine = "";
 }

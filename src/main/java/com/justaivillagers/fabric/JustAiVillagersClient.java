@@ -75,6 +75,17 @@ public final class JustAiVillagersClient implements ClientModInitializer {
         dialogBinding = dialogKey;
         settingsBinding = settingsKey;
 
+        // The core cannot write to chat, so it is handed a sink. Every debug line becomes one
+        // prefixed chat message on the game thread.
+        com.justaivillagers.core.DebugChat.setSink(text -> {
+            MinecraftClient client = MinecraftClient.getInstance();
+            client.execute(() -> {
+                if (client.player != null) {
+                    client.player.sendMessage(Text.literal("§8[justaivillagers] §7" + text), false);
+                }
+            });
+        });
+        ModCommands.register();
         VillagerHooks.bind(watcher);
         ClientTickEvents.END_CLIENT_TICK.register(this::onEndTick);
 
@@ -122,11 +133,15 @@ public final class JustAiVillagersClient implements ClientModInitializer {
             // Always leave a trace in the log, even when the backend is healthy: a bug report needs
             // to show which model and endpoint were actually in use. The chat line stays rare.
             runtime.service().logHealthOnce();
-            if (hint == null) {
-                return;
-            }
-            ModRuntime.LOGGER.info("Backend hint: {}", hint);
             client.execute(() -> {
+                // The settings hint is unconditional: a player who has just installed the mod has no
+                // way of guessing that O opens anything, and it is the one thing needed to fix a
+                // silent backend. It is therefore said whether or not the server answered.
+                client.player.sendMessage(ModCommands.joinLine(), false);
+                if (hint == null) {
+                    return;
+                }
+                ModRuntime.LOGGER.info("Backend hint: {}", hint);
                 pendingHint = hint;
                 flushHint(client);
             });
@@ -207,6 +222,11 @@ public final class JustAiVillagersClient implements ClientModInitializer {
     }
 
     private void onEndTick(MinecraftClient client) {
+        // A command asked for the settings screen last tick; chat has closed by now.
+        if (client.currentScreen == null && ModCommands.takeOpenSettingsRequest()) {
+            client.setScreen(new VillagerSettingsScreen(null));
+            return;
+        }
         // The settings keybind works while no other screen is open. Minecraft only polls keybinds
         // from the in-game input handler, so this cannot fire from the title screen; the screen is
         // still reachable within seconds of joining a world.

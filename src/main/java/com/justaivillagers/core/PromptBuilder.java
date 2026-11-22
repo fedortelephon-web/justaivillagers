@@ -25,7 +25,9 @@ public final class PromptBuilder {
         LangPack pack = LangData.of(Lang.normalise(lang));
         String prompt = base(pack, profile, ctx, history, sessionLabel)
                 + pack.t("reply_ask", playerMessage);
-        return new LlmRequest(pack.t("system"), prompt, config.temperature, config.maxTokens);
+        LlmRequest request = new LlmRequest(pack.t("system"), prompt, config.temperature, config.maxTokens);
+        request.playerLine = playerMessage;
+        return request;
     }
 
     /** Prompt for a line the villager says to nobody in particular. */
@@ -42,11 +44,14 @@ public final class PromptBuilder {
 
     /** Prompt used when the player wakes a sleeping villager. */
     public static LlmRequest sleeping(ModConfig config, String lang, VillagerProfile profile, WorldContext ctx,
-                                      DialogueHistory history, String sessionLabel) {
+                                      String playerMessage, DialogueHistory history, String sessionLabel) {
         LangPack pack = LangData.of(Lang.normalise(lang));
         String prompt = base(pack, profile, ctx, history, sessionLabel)
                 + pack.t("sleep_situation") + pack.t("sleep_ask");
-        return new LlmRequest(pack.t("system"), prompt, config.temperature, config.maxTokens);
+        LlmRequest request = new LlmRequest(pack.t("system"), prompt, config.temperature, config.maxTokens);
+        // Waking a villager is still the player saying something, so the debug echo shows it.
+        request.playerLine = playerMessage;
+        return request;
     }
 
     /** Prompt for a villager reacting to an event: being hit, or fleeing a hostile mob. */

@@ -93,7 +93,7 @@ public final class VillagerAiService {
         history.add(villagerId, ChatTurn.Role.USER, playerMessage);
         String sessionLabel = historyLabel(lang, villagerId, profile);
         LlmRequest request = sleeping
-                ? PromptBuilder.sleeping(config, lang, profile, ctx, history, sessionLabel)
+                ? PromptBuilder.sleeping(config, lang, profile, ctx, playerMessage, history, sessionLabel)
                 : PromptBuilder.reply(config, lang, profile, ctx, playerMessage, history, sessionLabel);
         return run(villagerId, lang, profile, ctx, request, onLine, onError,
                 () -> FallbackLines.forSleeping(lang));
@@ -122,7 +122,7 @@ public final class VillagerAiService {
      * polling with a deadline instead of {@code Thread.sleep}, and always clears the running flag.
      */
     public void runGroupDialogue(String lang, VillagerProfile first, VillagerProfile second, WorldContext ctx,
-                                 int lines, Callback onLine) {
+                                 int lines, Callback onLine, java.util.function.BooleanSupplier stillThere) {
         if (!groupRunning.compareAndSet(false, true)) {
             return;
         }
@@ -134,6 +134,13 @@ public final class VillagerAiService {
                     VillagerProfile[] profilesByTurn = {first, second};
                     for (int i = 0; i < lines; i++) {
                         if (Thread.currentThread().isInterrupted()) {
+                            return;
+                        }
+                        // A conversation is between two living villagers. When one of them is killed
+                        // mid-evening the exchange used to keep going, with the dead one still
+                        // producing lines - the other half of the chat kept talking to a corpse.
+                        if (stillThere != null && !stillThere.getAsBoolean()) {
+                            log.info("Group dialogue stopped: a speaker is gone");
                             return;
                         }
                         VillagerProfile speaker = profilesByTurn[i % 2];
@@ -151,6 +158,11 @@ public final class VillagerAiService {
                                 break;
                             }
                             text = FallbackLines.forGroupLine(lang, speaker, ctx);
+                        }
+                        // Death can land between the check above and this line, so ask again right
+                        // before the text reaches the chat.
+                        if (stillThere != null && !stillThere.getAsBoolean()) {
+                            return;
                         }
                         transcript.add(new String[]{speaker.name, text});
                         String line = "[" + speaker.name + " → " + listener.name + "] " + text;

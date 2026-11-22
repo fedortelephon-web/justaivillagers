@@ -64,10 +64,13 @@ public final class OllamaBackend implements LlmBackend {
             HttpResponse<String> resp = http.send(req, HttpResponse.BodyHandlers.ofString(StandardCharsets.UTF_8));
             if (resp.statusCode() != 200) {
                 fresh = Health.down("HTTP " + resp.statusCode());
-            } else if (!modelInstalled(resp.body())) {
-                fresh = Health.down("model " + config.model + " is not installed");
             } else {
-                fresh = Health.ok();
+                java.util.Set<String> installed = installedModels(resp.body());
+                if (!installed.contains(config.model) && !installed.contains(latestTag(config.model))) {
+                    fresh = new Health(false, "model " + config.model + " is not installed", installed);
+                } else {
+                    fresh = new Health(true, "ok", installed);
+                }
             }
         } catch (HttpTimeoutException e) {
             fresh = Health.down("health check timed out");
@@ -82,17 +85,27 @@ public final class OllamaBackend implements LlmBackend {
         return fresh;
     }
 
-    private boolean modelInstalled(String body) {
+    /** {@code name} with a {@code :latest} tag if it has none, the way Ollama reports models. */
+    static String latestTag(String name) {
+        return name != null && !name.contains(":") ? name + ":latest" : name;
+    }
+
+    /**
+     * Every model name in a {@code /api/tags} response.
+     *
+     * <p>Static and total: a malformed body yields an empty set rather than an exception, because
+     * the caller is a health probe whose only job is to answer yes or no.
+     */
+    static java.util.Set<String> installedModels(String body) {
+        java.util.Set<String> names = new java.util.HashSet<>();
         if (body == null || body.isBlank()) {
-            return false;
+            return names;
         }
         try {
             JsonObject root = JsonParser.parseString(body).getAsJsonObject();
             if (!root.has("models") || !root.get("models").isJsonArray()) {
-                return false;
+                return names;
             }
-            String wanted = config.model;
-            String wantedBase = wanted.contains(":") ? wanted : wanted + ":latest";
             for (com.google.gson.JsonElement el : root.getAsJsonArray("models")) {
                 if (!el.isJsonObject()) {
                     continue;
@@ -100,18 +113,14 @@ public final class OllamaBackend implements LlmBackend {
                 JsonObject model = el.getAsJsonObject();
                 for (String key : new String[]{"name", "model"}) {
                     if (model.has(key) && model.get(key).isJsonPrimitive()) {
-                        String name = model.get(key).getAsString();
-                        if (name.equals(wanted) || name.equals(wantedBase)) {
-                            return true;
-                        }
+                        names.add(model.get(key).getAsString());
                     }
                 }
             }
-            return false;
         } catch (JsonParseException | IllegalStateException e) {
-            log.warn("Could not parse /api/tags response: {}", e.getMessage());
-            return false;
+            return names;
         }
+        return names;
     }
 
     @Override
@@ -131,7 +140,13 @@ public final class OllamaBackend implements LlmBackend {
 
         String body = GSON.toJson(payload);
         if (config.debugPrompts) {
+            // The toggle is now "write prompts to chat": the log was never where a player looks, and
+            // the question it answers ("what exactly was sent when I said this?") is asked while
+            // playing. The full JSON stays in the log for bug reports.
             log.info("[prompt] {}", body);
+            // Only the player's own line goes to chat; the assembled prompt above is a screenful of
+            // context and would bury it.
+            DebugChat.emit(request.playerLine);
         }
 
         String responseBody = post("/api/generate", body);

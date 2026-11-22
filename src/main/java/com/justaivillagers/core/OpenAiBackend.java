@@ -95,6 +95,9 @@ public final class OpenAiBackend implements LlmBackend {
         String body = GSON.toJson(payload);
         if (config.debugPrompts) {
             log.info("[prompt] {}", body);
+            // Same as the Ollama backend: the toggle puts the player's own request in chat, not the
+            // assembled prompt, which is a screenful of context.
+            DebugChat.emit(request.playerLine);
         }
 
         HttpRequest.Builder builder = HttpRequest.newBuilder()

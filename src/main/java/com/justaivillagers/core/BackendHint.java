@@ -17,7 +17,7 @@ public final class BackendHint {
 
     /** The command that starts the local server, offered as text for the player to paste. */
     public static final String START_COMMAND = "ollama serve";
-    public static final String MODRINTH_URL = "https://modrinth.com/mod/justaivillagers";
+    public static final String MODRINTH_URL = "https://modrinth.com/mod/just-ai-villagers";
 
     private BackendHint() {
     }
