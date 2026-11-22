@@ -21,7 +21,7 @@ This is the Minecraft 1.21.1 build of the same release: the feature set is ident
   in a new world costs nothing.
 
   Settings are edited on a copy and written only on Save, so Cancel really cancels. Saving rebuilds
-  the backend in place — no restart, and the villagers keep their names and the conversation so far
+  the backend in place. No restart is needed, and the villagers keep their names and the conversation so far
   instead of looking like the mod reset itself.
 
 - **A model picker with five small models.** `qwen2.5:0.5b` (398 MB), `qwen3:0.6b` (523 MB),
@@ -34,7 +34,7 @@ This is the Minecraft 1.21.1 build of the same release: the feature set is ident
   to run `ollama pull gemma3:4b` assumes you know what a terminal is.
 
 - **Ollama installer download.** When the server is unreachable the screen offers to download the
-  installer and shows where it was saved. It deliberately does not run it — a Minecraft mod that
+  installer and shows where it was saved. It does not run it: a Minecraft mod that
   silently launches executables is exactly what malware does, and Windows would show a SmartScreen
   prompt the player did not ask for. The player double-clicks the file; it is one extra step and no
   surprises.
@@ -61,7 +61,7 @@ This is the Minecraft 1.21.1 build of the same release: the feature set is ident
 
 - **A "Why doesn't it work?.." guide inside the mod.** A bright yellow button on the Model tab
   opens a short, paginated walkthrough: install Ollama (Windows, macOS, Linux), start the server,
-  download a model, then check the connection — plus a section on what each failure message means.
+  download a model, then check the connection, plus a section on what each failure message means.
   The settings screen could say *that* the backend was down, but not what to do about it, and the
   three jobs (install, start, pull a model) each fail differently. The guide sits on an opaque panel
   so the text stays readable over snow, lava or a bright sky, and pages break at list items rather
@@ -148,8 +148,8 @@ This is the Minecraft 1.21.1 build of the same release: the feature set is ident
 
 - **A trade block for every profession, in all nine languages.** Each villager is now told what its
   trade actually handles: a leatherworker gets leather, a saddle, leather armour and rabbit hide; a
-  mason gets stone bricks, clay, terracotta and quartz. Villagers with no trade — the layabout, the
-  child, the unemployed villager — get their own block instead of an empty one.
+  mason gets stone bricks, clay, terracotta and quartz. Villagers with no trade, such as the layabout, the
+  child and the unemployed villager, get their own block instead of an empty one.
 
   This closes the "crocodile leather" problem properly. The prompt used to say only "mention things
   that fit your trade", which leaves the model to guess what fits, and the guess is exactly where
@@ -168,7 +168,7 @@ This is the Minecraft 1.21.1 build of the same release: the feature set is ident
 ### Fixed
 
 - **Villagers no longer talk about building or repairing things.** The model used to invent
-  construction work — "we should strengthen the walls", "I need to finish my roof" — which villagers
+  construction work ("we should strengthen the walls", "I need to finish my roof"), which villagers
   in Minecraft never do. Every language pack now states plainly that houses, walls, bridges and roads
   are made by the player, not by the villager.
 
@@ -185,7 +185,7 @@ This is the Minecraft 1.21.1 build of the same release: the feature set is ident
 
 - **Turkish, Polish and Italian.** Nine languages now: English, Turkish, Spanish, Portuguese,
   German, Polish, French, Italian and Russian.
-- Turkish is the big one. A 2026 server-market survey put it at **9.7% of Minecraft players** —
+- Turkish is the big one. A 2026 server-market survey put it at **9.7% of Minecraft players**,
   second after English and seven times French, which the mod already spoke. Guessing the order
   without data had put the wrong languages in first.
 
@@ -244,7 +244,7 @@ This is the Minecraft 1.21.1 build of the same release: the feature set is ident
 - Defaults: `temperature` 1.2 to 0.8, `temperatureGroup` 1.3 to 0.9, `historyTtlSeconds` 120 to 900,
   `requestTimeoutSeconds` 60 to 30, `maxTokens` 96 to 160. Existing config files keep their values.
 
-## 1.1.0 — rewrite
+## 1.1.0: rewrite
 
 A ground-up rework of the internals. Behaviour is close to 1.0.0, but the bugs are gone and the mod
 is now configurable.
@@ -257,7 +257,7 @@ is now configurable.
   duplicate.
 - **All dialogue appeared in one instant.** The model answers much faster than a person talks, so an
   evening exchange landed as a wall of text. Lines are now paced at `length × 90 ms` (clamped to
-  0.6–12 s) and released one per tick through a chat queue. Reactions to a punch or a monster skip
+  0.6-12 s) and released one per tick through a chat queue. Reactions to a punch or a monster skip
   the pace entirely and jump the queue, because an event should answer at once.
 - **The mod crashed on startup on 1.21.11.** `Identifier.of(String, String)` was left in its named
   form during remapping, so the client died with `NoSuchMethodError` before the main menu. Only a

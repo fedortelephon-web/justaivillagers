@@ -16,7 +16,7 @@ import java.util.concurrent.atomic.AtomicLong;
  * Orchestrates generation: bounded concurrency, named worker threads, fallback lines, per-villager
  * throttling and a single place where errors become player-visible text.
  *
- * <p>The original fired a request per tick per villager on the common ForkJoin pool ({@code 2e-4}
+ * <p>Requests are not fired per tick per villager on the common ForkJoin pool ({@code 2e-4}
  * chance times 15 villagers is a lot of simultaneous LLM calls), used {@code Thread.sleep} to pace
  * dialogue, swallowed exceptions and could leave the group-dialogue flag stuck forever. All of that
  * is concentrated here now.
@@ -136,9 +136,8 @@ public final class VillagerAiService {
                         if (Thread.currentThread().isInterrupted()) {
                             return;
                         }
-                        // A conversation is between two living villagers. When one of them is killed
-                        // mid-evening the exchange used to keep going, with the dead one still
-                        // producing lines - the other half of the chat kept talking to a corpse.
+                        // A conversation needs two living villagers. If one dies mid-evening, the
+                        // exchange stops instead of letting the survivor talk to a corpse.
                         if (stillThere != null && !stillThere.getAsBoolean()) {
                             log.info("Group dialogue stopped: a speaker is gone");
                             return;

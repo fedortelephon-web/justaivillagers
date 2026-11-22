@@ -3,22 +3,16 @@ package com.justaivillagers.core;
 import java.util.function.Consumer;
 
 /**
- * A place for the core to hand short debug lines to whatever can show them to the player.
- *
- * <p>The core has no idea what chat is - it is plain Java and runs under tests - so it exposes a
- * sink that the Fabric layer fills in. Without a sink (tests, or the title screen) lines go nowhere,
- * which is exactly what should happen.
+ * Hand-off point for short debug lines from the core to the player. The core is plain Java and does
+ * not know about chat, so the Fabric layer installs a sink; with no sink (tests, title screen) the
+ * lines are discarded.
  */
 public final class DebugChat {
 
     /** Longest line worth putting in chat; beyond this a chat message is unreadable anyway. */
     private static final int MAX_LINE = 240;
 
-    /**
-     * One shouted line reaches every nearby villager as its own request, so the same text arrives
-     * here several times in a row. Echoing each one filled the chat with copies of a single
-     * question, so a repeat of the last line within this window is dropped.
-     */
+    /** One shout becomes one request per nearby villager; identical lines inside this window are dropped. */
     private static final long REPEAT_WINDOW_MS = 5000L;
 
     private static volatile Consumer<String> sink;
@@ -38,7 +32,7 @@ public final class DebugChat {
         return sink != null;
     }
 
-    /** Offers one line to the sink; never throws, because a debugging aid must not break dialogue. */
+    /** Offers one line to the sink. Swallows runtime failures: debugging must not break dialogue. */
     public static void emit(String text) {
         Consumer<String> target = sink;
         if (target == null || text == null || text.isBlank()) {

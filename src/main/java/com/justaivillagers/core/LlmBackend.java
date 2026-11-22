@@ -1,9 +1,8 @@
 package com.justaivillagers.core;
 
 /**
- * A language backend. Implementations must be thread-safe and must honour the configured timeouts:
- * the original build hung forever when the model stalled, which then left the group-dialogue flag
- * stuck on.
+ * A language backend. Implementations must be thread-safe and must honour the configured timeouts;
+ * a stalled model that is never timed out also leaves the group-dialogue flag stuck on.
  */
 public interface LlmBackend {
 
@@ -28,11 +27,9 @@ public interface LlmBackend {
         public final String detail;
 
         /**
-         * Names of the models the server already has, as {@code GET /api/tags} reports them.
-         *
-         * <p>The settings screen needs this to grey out Download on a model that is already there;
-         * asking the backend twice for the same answer would mean a second HTTP call per keystroke.
-         * Empty when the server did not answer, which is also the right answer then.
+         * Model names the server already has, as {@code GET /api/tags} reports them. Used to grey
+         * out Download for a model that is installed; cached here so a keystroke does not trigger a
+         * second HTTP call. Empty when the server did not answer.
          */
         public final java.util.Set<String> installed;
 

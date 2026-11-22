@@ -89,7 +89,7 @@ public final class JustAiVillagersClient implements ClientModInitializer {
         VillagerHooks.bind(watcher);
         ClientTickEvents.END_CLIENT_TICK.register(this::onEndTick);
 
-        // Exact hit detection instead of the original attack-cooldown heuristic.
+        // Exact hit detection instead of an attack-cooldown heuristic.
         AttackEntityCallback.EVENT.register((player, world, hand, entity, hitResult) -> {
             // In single player the integrated server runs in this same JVM and fabric fires this
             // callback from both the client and the server attack path, so without the side check

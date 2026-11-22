@@ -30,12 +30,9 @@ public final class LlmRequest {
     public List<ChatTurn> history = List.of();
 
     /**
-     * The player's own words, when this request answers something they typed.
-     *
-     * <p>Kept apart from {@link #userPrompt} on purpose: the user prompt is the whole assembled
-     * block (personality, time of day, trade, history, the question), and echoing that into chat
-     * buries the one thing the player wanted to see. Empty for unprompted lines and reactions,
-     * which have no player request behind them.
+     * The player's own words when this request answers something they typed. Separate from
+     * {@link #userPrompt}, which is the whole assembled block (personality, time, trade, history,
+     * question) and is not useful to echo. Empty for unprompted lines and reactions.
      */
     public String playerLine = "";
 }

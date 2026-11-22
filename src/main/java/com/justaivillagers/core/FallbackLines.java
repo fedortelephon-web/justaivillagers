@@ -4,9 +4,8 @@ import java.util.List;
 import java.util.concurrent.ThreadLocalRandom;
 
 /**
- * Canned lines used when the model is unavailable or still loading. The original said nothing at
- * all in that case, which reads as "the mod is broken"; a short in-character line keeps the world
- * alive with zero latency.
+ * Canned lines used when the model is unavailable or still loading, so a missing backend reads as a
+ * quiet villager rather than a broken mod, and no request latency is involved.
  *
  * <p>All wording comes from {@link LangPack}, so every supported language has its own lines.
  */
@@ -33,10 +32,8 @@ public final class FallbackLines {
             return pick(pack.fallback(child ? "hurt_child" : "hurt_adult"));
         }
         if ("flee".equals(eventKey)) {
-            // Children have a father and no mother, so they call for dad, not for help in general.
-            // The canned lines used to name a zombie no matter what was chasing, which read as a
-            // plain bug next to a skeleton or a creeper; when the caller knows the mob, its name is
-            // substituted instead.
+            // Children call for their father. When the caller knows which mob is chasing, its
+            // name is substituted into the line instead of a fixed one.
             if (mobName != null && !mobName.isBlank()) {
                 String line = pack.t(child ? "flee_child_line" : "flee_adult_line", capitalise(mobName));
                 if (!line.isEmpty() && !line.startsWith("flee_")) {
