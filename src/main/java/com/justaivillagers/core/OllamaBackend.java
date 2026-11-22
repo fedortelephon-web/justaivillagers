@@ -19,7 +19,7 @@ import com.google.gson.JsonParser;
 /**
  * Native Ollama backend ({@code POST /api/generate}, health via {@code GET /api/tags}).
  *
- * <p>Compared to the original implementation this uses JSON serialisation instead of regex parsing,
+ * <p>Uses JSON serialisation instead of regex parsing,
  * sets a request timeout, distinguishes "server down" from "model missing", sends
  * {@code num_predict} and {@code keep_alive}, and caches the health probe with an expiry.
  */

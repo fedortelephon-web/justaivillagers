@@ -32,8 +32,8 @@ random other one.
 
 The list comes from a 2026 survey of public server markets, which put English at 65.2% of players,
 Turkish at 9.7%, Spanish 4.6%, Portuguese 3.8%, German 2.4%, Polish 1.3%, French 1.3%, Italian 0.8%
-and Russian 0.2%. Server markets are a proxy rather than a census — Russian and Chinese players are
-under-counted because many play on their own launchers — but the Turkish figure is not an artefact:
+and Russian 0.2%. Server markets are a proxy rather than a census. Russian and Chinese players are
+under-counted because many play on their own launchers, but the Turkish figure is not an artefact:
 it is backed by 431 tracked servers.
 
 The whole village speaks one language at a time: names, character traits, fallback lines and the
@@ -43,7 +43,7 @@ prompts that steer the model are all translated, not just the labels. A new lang
 ## Configuration
 
 The config file lives at `.minecraft/config/justaivillagers.json` and is created on first launch.
-Edit it and rejoin a world to apply — the file is re-read on world join.
+Edit it and rejoin a world to apply. The file is re-read on world join.
 
 | Key | Default | Meaning |
 | --- | --- | --- |
@@ -99,11 +99,11 @@ The jar appears in `build\libs\`. Requires JDK 21+; Gradle is downloaded by the 
 
 ## Project layout
 
-- `src/main/java/com/justaivillagers/core` — pure Java: config, HTTP backends, prompt building,
+- `src/main/java/com/justaivillagers/core`: pure Java, config, HTTP backends, prompt building,
   history, fallbacks. No Minecraft imports, so it is unit-testable.
-- `src/main/java/com/justaivillagers/fabric` — the thin Fabric layer: tick loop, dialog screen,
+- `src/main/java/com/justaivillagers/fabric`: the thin Fabric layer, tick loop, dialog screen,
   keybind, translating game state into the core's `WorldContext`.
-- `src/test/java` — dependency-free test harness plus a fake HTTP server. Run with
+- `src/test/java`: dependency-free test harness plus a fake HTTP server. Run with
   `tools\run-tests.bat` (see below) or any JUnit-less runner.
 
 ## License

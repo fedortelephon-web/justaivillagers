@@ -20,9 +20,9 @@ import net.minecraft.util.math.Vec3d;
  * Per-tick logic: which villagers speak up, who is fleeing, who was hit, and who talks to whom in
  * the evening.
  *
- * <p>Differences from the original: throttling lives in the service (bounded concurrency), the
- * per-villager maps are bounded, hitting a villager is detected through an attack hook instead of a
- * cooldown heuristic, and the O(villagers x entities) scan is done once per tick instead of twice.
+ * <p>Throttling lives in the service (bounded concurrency) and the per-villager maps are bounded.
+ * Hits are detected through an attack hook rather than a cooldown heuristic, and the
+ * O(villagers x entities) scan runs once per tick.
  */
 public final class VillagerWatcher {
 
@@ -79,8 +79,8 @@ public final class VillagerWatcher {
         if (client == null || client.world == null || client.player == null) {
             return;
         }
-        // Pump chat output before the screen check: answers to the dialog arrive while the dialog
-        // screen is open, which is exactly when this early return used to swallow them.
+        // Pump chat output before the screen check: dialog answers arrive while the dialog
+        // screen is open, so an early return here would swallow them.
         speech.tick(client);
         // Resolve hits even while a screen is open: a villager killed by the server must not be
         // resurrected by a reaction that was queued a tick earlier.
@@ -181,7 +181,7 @@ public final class VillagerWatcher {
         VillagerAiService service = runtime.service();
         for (VillagerEntity villager : villagers) {
             // The name of the closest monster that scares this villager, or null when it is calm.
-            // Passing null here used to leave the prompt with a generic "a monster", and the model
+            // Without a name the prompt says only "a monster", and the model
             // filled the gap with whatever it felt like - a villager standing next to a zombie kept
             // shouting about a skeleton. The name now comes from the entity itself, so the word in
             // the prompt matches the thing actually in the world.
@@ -259,7 +259,7 @@ public final class VillagerWatcher {
         runtime.service().runGroupDialogue(lang, first, second, ctx, 4,
                 // The service already waits between its own lines, so this skips the queue's pause.
                 line -> speech.enqueueImmediate(null, line),
-                // Both speakers must still be in the world: the evening chat used to carry on after
+                // Both speakers must still be in the world: the evening chat must not carry on after
                 // one of them was killed, with the dead villager still taking turns.
                 () -> alive(firstEntity) && alive(secondEntity));
     }
@@ -271,7 +271,7 @@ public final class VillagerWatcher {
             return;
         }
         // Belt and braces: the side check in the callback already drops the server-side duplicate.
-        // The cooldown is deliberately generous and wall-clock based: a player can land many hits per
+        // The cooldown is generous and wall-clock based: a player can land many hits per
         // second, and without it every punch would cost a full LLM request.
         long now = System.currentTimeMillis();
         UUID id = villager.getUuid();

@@ -264,7 +264,7 @@ public final class VillagerSettingsScreen extends Screen {
             ButtonWidget select = ButtonWidget.builder(Text.literal(label), b -> {
                 draft.model = target.id;
                 // rebuild() restores the text the player had typed, on purpose, so that a slider drag
-                // cannot wipe an address. That also means selecting a model would leave the old name
+                // cannot wipe an address. That also means selecting a model leaves the old name
                 // in the field; writing it here makes the picker do what it looks like it does.
                 if (customModelField != null) {
                     customModelField.setText(target.id);

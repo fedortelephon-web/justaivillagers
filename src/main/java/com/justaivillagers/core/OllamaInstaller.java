@@ -14,7 +14,7 @@ import java.time.Duration;
 /**
  * Downloads the Ollama installer for the current OS.
  *
- * <p>Deliberately does <em>not</em> run the installer. Executing a downloaded binary from inside a
+ * <p>Does <em>not</em> run the installer. Executing a downloaded binary from inside a
  * mod would be an unexpected thing for a Minecraft client to do: it trips antivirus heuristics,
  * Windows shows a SmartScreen prompt the player did not ask for, and a mod that silently launches
  * executables is exactly the behaviour malware uses. The file is saved and its path shown, and the

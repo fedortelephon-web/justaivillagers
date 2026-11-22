@@ -14,10 +14,10 @@ import net.minecraft.text.Text;
 /**
  * Client-side commands under {@code /justaivillagers}.
  *
- * <p>Everything here is client-only on purpose: the mod never sends anything to a server, so no
- * command needs operator rights or a server-side mod. The point of the commands is diagnosis — when
- * villagers stay silent, {@code status} answers "is the server up, is the model downloaded, what is
- * being downloaded" without opening the GUI.
+ * <p>Client-only: the mod never sends anything to a server, so no command needs operator rights or
+ * a server-side mod. The commands exist for diagnosis; when villagers stay silent, {@code status}
+ * reports whether the server is up, whether the model is downloaded and what is downloading,
+ * without opening the GUI.
  */
 public final class ModCommands {
 

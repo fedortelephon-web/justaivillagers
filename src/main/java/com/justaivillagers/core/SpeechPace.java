@@ -1,13 +1,11 @@
 package com.justaivillagers.core;
 
 /**
- * Turns a line of text into a pause that matches how long a person would take to say it.
+ * Converts a line of text into a pause proportional to its spoken length.
  *
- * <p>The model replies in a fraction of a second, so without pacing an evening dialogue between two
- * villagers lands in chat as a wall of text. Holding each line back for
- * {@code length * speechPaceMsPerChar} milliseconds makes the exchange read like speech. The raw
- * character count is deliberately naive: punctuation and spaces count too, which is close enough to
- * a human reading rhythm and avoids language-specific rules.
+ * <p>Each line is held back for {@code length * speechPaceMsPerChar} milliseconds so a dialogue
+ * arrives at reading speed instead of all at once. The character count includes punctuation and
+ * spaces, which is close enough to speech rhythm and needs no per-language rules.
  */
 public final class SpeechPace {
 

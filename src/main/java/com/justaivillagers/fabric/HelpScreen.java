@@ -114,7 +114,7 @@ public final class HelpScreen extends Screen {
     @Override
     protected void init() {
         // Minecraft calls init() again after a window resize, and the wrap width changes with it,
-        // so the text has to be rebuilt; keeping the old lines let them overflow the panel.
+        // so the text has to be rebuilt; keeping the old lines lets them overflow the panel.
         if (lines.isEmpty() || builtWidth != contentWidth()) {
             buildLines();
             builtWidth = contentWidth();
