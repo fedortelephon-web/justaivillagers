@@ -73,16 +73,28 @@ public final class VillagerSettingsScreen extends Screen {
     /** Which keybind row is waiting for a key press: 0 none, 1 dialog, 2 settings. */
     private int capturingKey;
 
-    /** Model download in flight, if any. */
-    private ModelPuller puller;
-    private String pullingModel;
-    private long pullDone;
-    private long pullTotal;
-    private String pullStatus = "";
-    private boolean pullFinished;
 
     /** Set by a listener when the widget state must change; tick() performs the rebuild. */
     private volatile boolean needsRebuild;
+
+    /**
+     * A model download that outlives this screen object.
+     *
+     * <p>Closing the screen is not the same as cancelling the download: the pull runs on a daemon
+     * thread owned by Ollama, and rebuilding the screen from scratch would lose the bar. The state
+     * therefore lives in a static holder that the next {@code VillagerSettingsScreen} picks up, so
+     * pressing O again shows the same progress rather than a fresh, empty tab.
+     */
+    private static final class PullState {
+        private static ModelPuller puller;
+        private static String model;
+        private static long done;
+        private static long total;
+        private static String status = "";
+        private static boolean finished;
+        private static String outcome = "";
+        private static boolean outcomeError;
+    }
 
     /** Installer download in flight, if any. */
     private OllamaInstaller installer;
@@ -125,7 +137,8 @@ public final class VillagerSettingsScreen extends Screen {
     @Override
     protected void init() {
         // The health probe is a network call, but this runs on the game thread only once per screen
-        // open with a short timeout; the backend caches it so later opens are instant.
+        // open with a short timeout; the backend caches it so later opens are instant. A forced
+        // probe is what makes a model that finished downloading show up as installed on reopen.
         health = ModRuntime.get().healthNow();
         probedModel = ModRuntime.get().config().model;
         build();
@@ -180,15 +193,15 @@ public final class VillagerSettingsScreen extends Screen {
             buildLanguageTab();
         }
 
-        // Save / Cancel pinned to the bottom, never overlapping the content area.
+        // Save / Cancel pinned to the bottom, never overlapping the content area. Two buttons only:
+        // Cancel and Close both mean "leave without saving", so having both was one more choice to
+        // read for no gain, and Cancel on the left matches the order of the other screens.
         int buttonY = this.height - BOTTOM_BAR + 3;
-        int bw = Math.min(100, (this.width - 16) / 3);
-        addDrawableChild(ButtonWidget.builder(Text.literal(t("settings.save")), b -> save())
-                .dimensions(cx - bw - 4 - bw / 2 - 2, buttonY, bw, 20).build());
+        int bw = Math.min(120, (this.width - 20) / 2);
         addDrawableChild(ButtonWidget.builder(Text.literal(t("settings.cancel")), b -> close())
-                .dimensions(cx - bw / 2, buttonY, bw, 20).build());
-        addDrawableChild(ButtonWidget.builder(Text.literal(t("settings.close")), b -> close())
-                .dimensions(cx + bw / 2 + 6, buttonY, bw, 20).build());
+                .dimensions(cx - bw - 4, buttonY, bw, 20).build());
+        addDrawableChild(ButtonWidget.builder(Text.literal(t("settings.save")), b -> save())
+                .dimensions(cx + 4, buttonY, bw, 20).build());
     }
 
     /** How many rows the active tab needs; used only to size rows before laying them out. */
@@ -261,16 +274,23 @@ public final class VillagerSettingsScreen extends Screen {
             select.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(Text.literal(modelTip(entry))));
             addDrawableChild(select);
 
-            boolean isPulling = pullingModel != null && pullingModel.equals(entry.id);
+            boolean isPulling = PullState.model != null && PullState.model.equals(entry.id);
+            // A downloaded model says so and cannot be downloaded again: the button would only
+            // re-fetch the same bytes, and a greyed-out row is the clearest way to show "you have
+            // this one already". In-flight pulls keep their own state.
+            boolean installed = !isPulling && health != null && health.hasModel(entry.id);
             String downloadText = isPulling
                     ? "..."
-                    : this.textRenderer.trimToWidth(t("settings.model.get"), downloadW - 8);
+                    : this.textRenderer.trimToWidth(
+                            t(installed ? "settings.model.installed" : "settings.model.get"),
+                            downloadW - 8);
             ButtonWidget download = ButtonWidget.builder(
                     Text.literal(downloadText),
                     b -> startPull(target.id)).dimensions(x + w - downloadW, y, downloadW, fieldH).build();
-            download.active = !pullFinished && pullingModel == null;
-            download.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(
-                    Text.literal(t("settings.model.get.tip", entry.id))));
+            download.active = !installed && PullState.model == null;
+            download.setTooltip(net.minecraft.client.gui.tooltip.Tooltip.of(Text.literal(
+                    installed ? t("settings.model.installed.tip")
+                            : t("settings.model.get.tip", entry.id))));
             addDrawableChild(download);
             y += rowHeight;
         }
@@ -336,50 +356,90 @@ public final class VillagerSettingsScreen extends Screen {
     }
 
     private void startPull(String model) {
-        if (pullingModel != null) {
+        if (PullState.model != null) {
             return;
         }
-        pullingModel = model;
-        pullFinished = false;
-        pullDone = 0;
-        pullTotal = -1;
-        pullStatus = "";
+        PullState.model = model;
+        PullState.finished = false;
+        PullState.done = 0;
+        PullState.total = -1;
+        PullState.status = "";
+        PullState.outcome = "";
+        PullState.outcomeError = false;
 
         // Pull against the address currently in the field, so a player who just fixed the URL does
         // not have to save first to make the download work.
         ModConfig probe = draft.copy();
         probe.baseUrl = urlField != null ? urlField.getText() : draft.baseUrl;
 
-        ModelPuller active = new ModelPuller(probe, ModRuntime.LOGGER);
-        this.puller = active;
+        final ModelPuller active = new ModelPuller(probe, ModRuntime.LOGGER);
+        PullState.puller = active;
         active.pull(model, new ModelPuller.Listener() {
             @Override
             public void onStatus(String text) {
-                pullStatus = text;
+                PullState.status = text;
             }
 
             @Override
             public void onProgress(long completed, long total) {
-                pullDone = completed;
-                pullTotal = total;
+                PullState.done = completed;
+                PullState.total = total;
             }
 
             @Override
             public void onDone() {
-                pullFinished = true;
+                PullState.finished = true;
                 needsRebuild = true;
-                pullingModel = null;
+                PullState.model = null;
+                PullState.outcome = t("settings.model.done", model);
+                PullState.outcomeError = false;
+                // The download outlives the screen, so chat is the only place its result is still
+                // visible once the player has walked away from the menu.
+                announce(PullState.outcome, true);
                 draft.model = model;
+                // Download buttons depend on what the server now has, so refresh the probe.
+                probeDraft();
             }
 
             @Override
             public void onError(String message) {
-                pullStatus = message;
+                PullState.status = message;
                 needsRebuild = true;
-                pullingModel = null;
+                PullState.model = null;
+                PullState.outcome = t("settings.model.failed", model, message);
+                PullState.outcomeError = true;
+                announce(PullState.outcome, false);
             }
         });
         rebuild();
+    }
+
+    /**
+     * The current model download as one chat line, or {@code null} when nothing is downloading.
+     *
+     * <p>Used by {@code /justaivillagers status}, which is where a player looks when the screen is
+     * closed and the progress bar is therefore invisible.
+     */
+    static String pullSummary() {
+        if (PullState.model == null) {
+            return null;
+        }
+        if (PullState.total > 0) {
+            int percent = (int) Math.min(100L, PullState.done * 100L / PullState.total);
+            return t("settings.model.downloading", percent + "%") + " " + PullState.model;
+        }
+        return t("settings.model.downloading", PullState.status.isEmpty() ? "..." : PullState.status)
+                + " " + PullState.model;
+    }
+
+    /** Posts a one-line result to chat, if there is a player to read it. */
+    private static void announce(String text, boolean ok) {
+        MinecraftClient client = MinecraftClient.getInstance();
+        if (client == null || client.player == null || text == null || text.isEmpty()) {
+            return;
+        }
+        client.player.sendMessage(
+                Text.literal("§8[justaivillagers] " + (ok ? "§a" : "§c") + text), false);
     }
 
     private void startInstaller() {
@@ -709,9 +769,9 @@ public final class VillagerSettingsScreen extends Screen {
 
     @Override
     public void close() {
-        if (puller != null) {
-            puller.cancel();
-        }
+        // A model download keeps running when the screen closes. Cancelling it here meant that
+        // pressing O again showed an idle tab and an empty progress bar while Ollama was still
+        // fetching gigabytes in the background, and the player had no way to see it finish.
         if (installer != null) {
             installer.cancel();
         }
@@ -764,25 +824,31 @@ public final class VillagerSettingsScreen extends Screen {
             int limit = this.height - BOTTOM_BAR;
 
             // Model download: one caption, one bar, then four pixels of breathing room.
-            if (pullingModel != null) {
-                boolean known = pullTotal > 0;
-                float progress = known ? (float) pullDone / (float) pullTotal : -1f;
+            if (PullState.model != null) {
+                boolean known = PullState.total > 0;
+                float progress = known ? (float) PullState.done / (float) PullState.total : -1f;
                 // A model can be several blobs, so the percentage legitimately restarts; the status
                 // text says which phase is running so the bar does not look stuck or broken. Some
                 // phases report no total at all, hence the sweep and the dots.
                 String text = known
                         ? t("settings.model.downloading", percent(progress))
                         : t("settings.model.downloading", animatedDots());
-                if (!pullStatus.isEmpty()) {
-                    text = text + "  " + pullStatus;
+                if (!PullState.status.isEmpty()) {
+                    text = text + "  " + PullState.status;
                 }
                 drawLine(context, text, x, lineY, w, 0xFFFFFF, limit);
                 drawBar(context, x, lineY + 10, w, progress);
                 lineY += 18;
-            } else if (!pullStatus.isEmpty()) {
-                // Nothing is downloading but a phase message is still set: that is a finished or
-                // failed step, so show the dots too rather than a sentence that never changes.
-                drawLine(context, pullStatus + animatedDots(), x, lineY, w, 0xFFAA00, limit);
+            } else if (!PullState.outcome.isEmpty()) {
+                // A result stays on screen after the download ends: it is the only confirmation left
+                // when the chat line has already scrolled away.
+                drawLine(context, PullState.outcome, x, lineY, w,
+                        PullState.outcomeError ? 0xFF5555 : 0x55FF55, limit);
+                lineY += 12;
+            } else if (!PullState.status.isEmpty()) {
+                // A phase message with no verdict yet: the dots say the step is still moving rather
+                // than showing a sentence that never changes.
+                drawLine(context, PullState.status + animatedDots(), x, lineY, w, 0xFFAA00, limit);
                 lineY += 12;
             }
 

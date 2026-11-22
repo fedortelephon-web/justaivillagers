@@ -34,9 +34,26 @@ public final class FallbackLines {
         }
         if ("flee".equals(eventKey)) {
             // Children have a father and no mother, so they call for dad, not for help in general.
+            // The canned lines used to name a zombie no matter what was chasing, which read as a
+            // plain bug next to a skeleton or a creeper; when the caller knows the mob, its name is
+            // substituted instead.
+            if (mobName != null && !mobName.isBlank()) {
+                String line = pack.t(child ? "flee_child_line" : "flee_adult_line", capitalise(mobName));
+                if (!line.isEmpty() && !line.startsWith("flee_")) {
+                    return line;
+                }
+            }
             return pick(pack.fallback(child ? "flee_child" : "flee_adult"));
         }
         return pick(pack.fallback("generic"));
+    }
+
+    /** "зомби" -> "Зомби", so the name reads as a word at the start of a shout. */
+    private static String capitalise(String text) {
+        if (text == null || text.isEmpty()) {
+            return "";
+        }
+        return text.substring(0, 1).toUpperCase(java.util.Locale.ROOT) + text.substring(1);
     }
 
     public static String forSleeping(String lang) {

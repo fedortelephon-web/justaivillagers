@@ -41,6 +41,24 @@ public final class VillagerWatcher {
     private final ConcurrentHashMap<UUID, Long> lastSpoke = new ConcurrentHashMap<>();
     /** Wall-clock time of the last hit reaction per villager; see {@code hurtCooldownMs}. */
     private final ConcurrentHashMap<UUID, Long> lastHurt = new ConcurrentHashMap<>();
+    /**
+     * Hits that were seen but not yet reacted to.
+     *
+     * <p>The attack callback fires before the damage is applied, so at that moment a fatal blow still
+     * looks like a healthy villager. Waiting one tick lets the health actually drop, which is what
+     * separates "ouch" from "the villager is dead and should stay silent".
+     */
+    private final java.util.List<PendingHurt> pendingHurt = new java.util.ArrayList<>();
+
+    private static final class PendingHurt {
+        final VillagerEntity villager;
+        final String lang;
+
+        PendingHurt(VillagerEntity villager, String lang) {
+            this.villager = villager;
+            this.lang = lang;
+        }
+    }
     private final SpeechQueue speech = new SpeechQueue();
     private long tickCounter;
     /** Tick of the last spontaneous line by anyone; {@code -1} until the first one. */
@@ -50,6 +68,7 @@ public final class VillagerWatcher {
         fleeing.clear();
         lastSpoke.clear();
         lastHurt.clear();
+        pendingHurt.clear();
         speech.clear();
         tickCounter = 0;
         lastAnyTalk = -1L;
@@ -63,6 +82,9 @@ public final class VillagerWatcher {
         // Pump chat output before the screen check: answers to the dialog arrive while the dialog
         // screen is open, which is exactly when this early return used to swallow them.
         speech.tick(client);
+        // Resolve hits even while a screen is open: a villager killed by the server must not be
+        // resurrected by a reaction that was queued a tick earlier.
+        resolvePendingHurts(client);
 
         if (client.currentScreen != null) {
             return;
@@ -118,6 +140,28 @@ public final class VillagerWatcher {
         return out;
     }
 
+    /**
+     * The monster's name as the player's client spells it, lower case and without a leading article.
+     *
+     * <p>Minecraft already translates "Zombie", "Skeleton" or "Creeper" into the client language, so
+     * the prompt gets a word the villagers would actually use instead of an entity id.
+     */
+    private static String mobName(HostileEntity hostile) {
+        try {
+            String name = hostile.getName().getString();
+            if (name != null && !name.isBlank()) {
+                return name.toLowerCase(java.util.Locale.ROOT);
+            }
+        } catch (Exception | Error e) {
+            // A custom mob with a broken name should not break the flee reaction.
+        }
+        try {
+            return hostile.getType().getName().getString().toLowerCase(java.util.Locale.ROOT);
+        } catch (Exception | Error e) {
+            return null;
+        }
+    }
+
     private void checkFleeing(MinecraftClient client, List<VillagerEntity> villagers, String lang, ModRuntime runtime) {
         if (client.world == null || client.player == null) {
             return;
@@ -136,22 +180,29 @@ public final class VillagerWatcher {
         }
         VillagerAiService service = runtime.service();
         for (VillagerEntity villager : villagers) {
-            boolean scared = false;
+            // The name of the closest monster that scares this villager, or null when it is calm.
+            // Passing null here used to leave the prompt with a generic "a monster", and the model
+            // filled the gap with whatever it felt like - a villager standing next to a zombie kept
+            // shouting about a skeleton. The name now comes from the entity itself, so the word in
+            // the prompt matches the thing actually in the world.
+            String threat = null;
+            double closest = Double.MAX_VALUE;
             for (HostileEntity hostile : hostiles) {
-                if (villager.squaredDistanceTo(hostile) <= HOSTILE_RADIUS_SQ) {
-                    scared = true;
-                    break;
+                double distance = villager.squaredDistanceTo(hostile);
+                if (distance <= HOSTILE_RADIUS_SQ && distance < closest) {
+                    closest = distance;
+                    threat = mobName(hostile);
                 }
             }
             UUID id = villager.getUuid();
             boolean wasScared = fleeing.contains(id);
-            if (scared && !wasScared) {
+            if (threat != null && !wasScared) {
                 fleeing.add(id);
                 VillagerProfile profile = profileFor(villager, lang, runtime);
                 WorldContext ctx = VillagerContextReader.read(villager);
-                service.askReaction(id, "flee", null, lang, profile, ctx,
+                service.askReaction(id, "flee", threat, lang, profile, ctx,
                         text -> sayNow(villagerName(profile), text), errorHandler(client));
-            } else if (!scared && wasScared) {
+            } else if (threat == null && wasScared) {
                 fleeing.remove(id);
             }
         }
@@ -203,9 +254,14 @@ public final class VillagerWatcher {
         VillagerProfile first = profileFor(villagers.get(0), lang, runtime);
         VillagerProfile second = profileFor(villagers.get(1), lang, runtime);
         WorldContext ctx = VillagerContextReader.read(villagers.get(0));
+        VillagerEntity firstEntity = villagers.get(0);
+        VillagerEntity secondEntity = villagers.get(1);
         runtime.service().runGroupDialogue(lang, first, second, ctx, 4,
                 // The service already waits between its own lines, so this skips the queue's pause.
-                line -> speech.enqueueImmediate(null, line));
+                line -> speech.enqueueImmediate(null, line),
+                // Both speakers must still be in the world: the evening chat used to carry on after
+                // one of them was killed, with the dead villager still taking turns.
+                () -> alive(firstEntity) && alive(secondEntity));
     }
 
     /** Entry point from the attack hook. */
@@ -227,11 +283,48 @@ public final class VillagerWatcher {
         if (lastHurt.size() > MAX_TRACKED) {
             lastHurt.clear();
         }
-        String lang = GameBridge.language(runtime.config().languageOverride);
-        VillagerProfile profile = profileFor(villager, lang, runtime);
-        WorldContext ctx = VillagerContextReader.read(villager);
-        runtime.service().askReaction(villager.getUuid(), "hurt", null, lang, profile, ctx,
-                text -> sayNow(villagerName(profile), text), errorHandler(client));
+        // Not asking yet: the blow has not been applied, so a killing hit would still be answered by
+        // a villager who is about to die. The next tick decides.
+        pendingHurt.add(new PendingHurt(villager, GameBridge.language(runtime.config().languageOverride)));
+    }
+
+    /**
+     * Turns hits seen last tick into reactions, but only for villagers that survived them.
+     *
+     * <p>This is the "died, then complained about being hit" bug: a fatal blow arrived, the villager
+     * was already gone, and a moment later its reaction line appeared in chat.
+     */
+    private void resolvePendingHurts(MinecraftClient client) {
+        if (pendingHurt.isEmpty()) {
+            return;
+        }
+        ModRuntime runtime = ModRuntime.get();
+        java.util.Iterator<PendingHurt> it = pendingHurt.iterator();
+        while (it.hasNext()) {
+            PendingHurt pending = it.next();
+            it.remove();
+            VillagerEntity villager = pending.villager;
+            // isRemoved covers the despawn that follows death; getHealth covers the same tick, before
+            // the entity is removed from the world.
+            if (villager == null || villager.isRemoved() || !villager.isAlive() || villager.getHealth() <= 0.0f) {
+                continue;
+            }
+            if (!runtime.config().enableEventReactions) {
+                continue;
+            }
+            String lang = pending.lang;
+            VillagerProfile profile = profileFor(villager, lang, runtime);
+            WorldContext ctx = VillagerContextReader.read(villager);
+            UUID id = villager.getUuid();
+            runtime.service().askReaction(id, "hurt", null, lang, profile, ctx,
+                    // The answer can take seconds, and the villager may be gone by then.
+                    text -> {
+                        if (!villager.isRemoved() && villager.isAlive() && villager.getHealth() > 0.0f) {
+                            sayNow(villagerName(profile), text);
+                        }
+                    },
+                    errorHandler(client));
+        }
     }
 
     private VillagerProfile profileFor(VillagerEntity villager, String lang, ModRuntime runtime) {
@@ -259,6 +352,11 @@ public final class VillagerWatcher {
             return;
         }
         speech.enqueueReaction(name, text);
+    }
+
+    /** Whether a villager is still standing in the world and not in the middle of dying. */
+    private static boolean alive(VillagerEntity villager) {
+        return villager != null && !villager.isRemoved() && villager.isAlive() && villager.getHealth() > 0.0f;
     }
 
     private static VillagerAiService.ErrorCallback errorHandler(MinecraftClient client) {

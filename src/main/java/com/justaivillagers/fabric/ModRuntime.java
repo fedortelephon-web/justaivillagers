@@ -132,6 +132,11 @@ public final class ModRuntime {
         return config;
     }
 
+    /** Timestamp of the config file as last read or written; used to tell "reloaded" from "same". */
+    long configStamp() {
+        return configStamp;
+    }
+
     public VillagerAiService service() {
         return service;
     }

@@ -76,16 +76,25 @@ public final class VillagerProfile {
 
         private static final int MAX_ENTRIES = 512;
 
-        private final ConcurrentHashMap<UUID, VillagerProfile> profiles = new ConcurrentHashMap<>();
+        // Keyed by language as well as UUID: the name and the character come from per-language word
+        // pools, so caching by UUID alone left a villager called "Леонид" and described as
+        // "подозрительный" sitting in an English client after the language was switched. The UUID
+        // still decides who the villager is, so the same person is drawn again in the new language.
+        private final ConcurrentHashMap<String, VillagerProfile> profiles = new ConcurrentHashMap<>();
+
+        private static String key(UUID id, String lang) {
+            return Lang.normalise(lang) + "/" + id;
+        }
 
         public VillagerProfile get(UUID id, boolean child, String lang) {
-            VillagerProfile existing = profiles.get(id);
+            String key = key(id, lang);
+            VillagerProfile existing = profiles.get(key);
             if (existing == null) {
                 VillagerProfile created = create(id, child, lang);
                 if (profiles.size() >= MAX_ENTRIES) {
                     profiles.clear();
                 }
-                profiles.put(id, created);
+                profiles.put(key, created);
                 return created;
             }
             if (existing.child == child) {
@@ -95,7 +104,7 @@ public final class VillagerProfile {
             // UUID that changes name at adulthood would look like a stranger, and its history would
             // be signed with the wrong name in every later prompt.
             VillagerProfile aged = existing.withChild(child);
-            profiles.put(id, aged);
+            profiles.put(key, aged);
             return aged;
         }
 
