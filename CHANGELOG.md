@@ -1,114 +1,11 @@
 # Changelog
 
-## Unreleased
-
-### Added
-
-- **Commands.** `/justaivillagers status`, `settings`, `reload` and `help` (bare command prints the
-  list). `status` names the address, the model, whether that model is downloaded and any download
-  in progress; `settings` opens the same screen as **O**; `reload` re-reads the config file without
-  rejoining. On world join the mod now prints the settings key and the command hint once.
-- **The prompt debug toggle writes to chat.** Renamed "Write prompts to chat": pressing Enter on a
-  line echoes exactly that line, which is what a player needs to see when a reply comes out wrong.
-  The full assembled prompt still goes to the log for bug reports.
-- **Chat shows your own line.** Talking to a villager added your question to the dialog window but
-  not to chat, so the chat copy showed answers to questions it had never asked.
-
-- **The Model tab no longer offers the Ollama helper.** Three buttons saying Download Ollama,
-  Copy link and Copy command, plus a paragraph explaining where to paste it, were crowding the tab
-  for a job the guide screen now does properly. The guide button stays where it was.
-- **Every control on the Behaviour tab explains itself on hover.** Toggles, sliders and both keybind
-  rows now carry a one-line tooltip saying what the setting changes and what turning it down does,
-  in all nine languages; previously only the Model tab had them.
-
-- **A "Why doesn't it work?.." guide inside the mod.** A bright yellow button on the Model tab
-  opens a short, paginated walkthrough: install Ollama (Windows, macOS, Linux), start the server,
-  download a model, then check the connection — plus a section on what each failure message means.
-  The settings screen could say *that* the backend was down, but not what to do about it, and the
-  three jobs (install, start, pull a model) each fail differently. The guide sits on an opaque panel
-  so the text stays readable over snow, lava or a bright sky, and pages break at list items rather
-  than mid-sentence. Translated into all nine languages.
-
-### Fixed
-
-- **The mod page link pointed at a project that does not exist.** The metadata and the chat hint
-  used `modrinth.com/mod/justaivillagers`; the published project is `just-ai-villagers`, so the link
-  404'd for anyone who clicked it.
-- **The README contradicted the licence.** It said "all rights reserved" while `LICENSE` and
-  `fabric.mod.json` say MIT.
-
-- **A scared villager names the monster that is actually there.** The flee prompt was built with no
-  mob name and the model filled the gap with whatever it liked, so a villager standing next to a
-  zombie kept shouting about a skeleton. The closest hostile mob's translated name now goes into
-  the prompt and into the canned fallback lines.
-- **A dead villager stops talking.** An evening conversation between two villagers carried on after
-  one of them was killed, with the dead one still taking turns. The exchange now checks that both
-  speakers are alive before every line.
-- **A fatal hit is not answered.** The reaction was queued from the attack callback, which runs
-  before damage is applied, so a killing blow still produced a line from a villager who was already
-  dead. Hits are held for one tick and dropped if the villager did not survive.
-- **Switching the game language renames the villagers.** Profiles were cached by UUID only, so the
-  name and character stayed in the old language for the rest of the session.
-
-- **Picking a model fills the name field.** Selecting a catalogue model left the old name in the
-  editable field, because a rebuild deliberately preserves whatever was typed; the picker now
-  writes the chosen id in as well.
-- **The Cancel button appears the moment a download starts.** It was only added on the next
-  rebuild, which happened on the next unrelated click, so an unwanted download looked
-  uncontrollable.
-- **The repeat reminder names the other real cause.** It said Ollama was not running; a wrong
-  server address produces the same silence, and it now says so.
-
-### Changed
-
-- **Chat links copy instead of opening.** Minecraft's open action hands the URL to whatever handler
-  the system registered, which is not always a browser, and its confirmation dialog then leads
-  nowhere. Clicking a link now copies it, and a chat line says where to paste it.
-- **"Open page" is gone, replaced by two copy buttons.** One copies `https://ollama.com/download`,
-  the other copies `ollama serve`, and a short line under them explains that the command goes into
-  PowerShell or cmd (Win+R, `cmd`, Enter). A button that opens nothing is worse than a string the
-  player can paste anywhere.
-
-## 1.2.0 - a settings screen, and Ollama without a terminal
+## 1.2.0 - commands, a settings screen, and Ollama without a terminal
 
 This is the Minecraft 1.20.1 build of the same release: the feature set is identical to the
 1.21.11 and 1.21.1 jars, compiled for Java 17 as 1.20.1 expects.
 
-
-### Fixed
-
-- **Check now tests what is on screen.** It used to probe the *saved* config, so changing the
-  address or picking a model and pressing Check re-tested the old values and looked broken. It now
-  probes the address and model currently typed, without saving, and its tooltip says so.
-- **The status line no longer lies.** It printed whichever model happened to be selected, so it
-  could claim "connected" for a model that was never checked. It now names the model that was
-  actually probed, and distinguishes "server up, model not downloaded" from "server unreachable".
-- **"Open page" opens a browser.** It called `java.awt.Desktop`, which does nothing in a game JVM
-  (the AWT toolkit is not initialised), so the button appeared dead. It now uses Minecraft's own
-  opener with the platform command as a fallback, and logs the outcome.
-- **The status text no longer overlaps the progress bar**, and is indented to line up with the
-  buttons instead of starting a few pixels to their left.
-- **Language names were mojibake.** The list showed `EspaГ±ol`, `FranГ§ais` and `Р сГСГСГ...`
-  because the strings had been through a CP1251 round trip. All nine names are correct again, and
-  the same corruption in the Russian and Portuguese setting labels was repaired.
-- **Unknown progress no longer looks frozen.** Some Ollama steps ("removing unused layers") report
-  no total, so the bar sat at 0%. It now sweeps, and the caption gets animated dots.
-
-### Changed
-
-- **The "backend down" message is one line.** It was a paragraph carrying the address, the download
-  link, the `ollama pull` command and the mod page, which players scroll past. It now names the
-  problem, gives the download link and points at the settings key. URLs in chat are clickable.
-- **The mod repeats the reminder when the backend is still down.** Talking to villagers with no
-  Ollama used to fail silently after the first message had scrolled away; pressing the talk key now
-  repeats a short reminder at most once every 45 seconds.
-- **Buttons have tooltips.** Model rows describe what each model is like to talk to, the text fields
-  explain themselves, and the download and Ollama buttons say what they do.
-- **Text fields show a grey placeholder** ("server address", "model name") when empty, and are a
-  couple of pixels narrower than the buttons so their outlines line up.
-
 ### Added
-
 
 - **An in-game settings screen.** Press `O` to open it. Every option in
   `config/justaivillagers.json` is reachable: server address, model, temperature, answer length,
@@ -145,16 +42,105 @@ This is the Minecraft 1.20.1 build of the same release: the feature set is ident
 - A "Check again" button re-probes the server, so starting Ollama mid-session is noticed without
   reopening the screen.
 
+- **Commands.** `/justaivillagers status`, `settings`, `reload` and `help` (bare command prints the
+  list). `status` names the address, the model, whether that model is downloaded and any download
+  in progress; `settings` opens the same screen as **O**; `reload` re-reads the config file without
+  rejoining. On world join the mod now prints the settings key and the command hint once.
+- **The prompt debug toggle writes to chat.** Renamed "Write prompts to chat": pressing Enter on a
+  line echoes exactly that line, which is what a player needs to see when a reply comes out wrong.
+  The full assembled prompt still goes to the log for bug reports.
+- **Chat shows your own line.** Talking to a villager added your question to the dialog window but
+  not to chat, so the chat copy showed answers to questions it had never asked.
+
+- **The Model tab no longer offers the Ollama helper.** Three buttons saying Download Ollama,
+  Copy link and Copy command, plus a paragraph explaining where to paste it, were crowding the tab
+  for a job the guide screen now does properly. The guide button stays where it was.
+- **Every control on the Behaviour tab explains itself on hover.** Toggles, sliders and both keybind
+  rows now carry a one-line tooltip saying what the setting changes and what turning it down does,
+  in all nine languages; previously only the Model tab had them.
+
+- **A "Why doesn't it work?.." guide inside the mod.** A bright yellow button on the Model tab
+  opens a short, paginated walkthrough: install Ollama (Windows, macOS, Linux), start the server,
+  download a model, then check the connection — plus a section on what each failure message means.
+  The settings screen could say *that* the backend was down, but not what to do about it, and the
+  three jobs (install, start, pull a model) each fail differently. The guide sits on an opaque panel
+  so the text stays readable over snow, lava or a bright sky, and pages break at list items rather
+  than mid-sentence. Translated into all nine languages.
+
 ### Changed
+
+- **The "backend down" message is one line.** It was a paragraph carrying the address, the download
+  link, the `ollama pull` command and the mod page, which players scroll past. It now names the
+  problem, gives the download link and points at the settings key. URLs in chat are clickable.
+- **The mod repeats the reminder when the backend is still down.** Talking to villagers with no
+  Ollama used to fail silently after the first message had scrolled away; pressing the talk key now
+  repeats a short reminder at most once every 45 seconds.
+- **Buttons have tooltips.** Model rows describe what each model is like to talk to, the text fields
+  explain themselves, and the download and Ollama buttons say what they do.
+- **Text fields show a grey placeholder** ("server address", "model name") when empty, and are a
+  couple of pixels narrower than the buttons so their outlines line up.
 
 - The settings screen and its 41 new strings are translated into all nine languages, and the keybind
   label is translated in all eleven Minecraft language files.
 
+- **Chat links copy instead of opening.** Minecraft's open action hands the URL to whatever handler
+  the system registered, which is not always a browser, and its confirmation dialog then leads
+  nowhere. Clicking a link now copies it, and a chat line says where to paste it.
+- **"Open page" is gone, replaced by two copy buttons.** One copies `https://ollama.com/download`,
+  the other copies `ollama serve`, and a short line under them explains that the command goes into
+  PowerShell or cmd (Win+R, `cmd`, Enter). A button that opens nothing is worse than a string the
+  player can paste anywhere.
+
 ### Fixed
+
+- **Check now tests what is on screen.** It used to probe the *saved* config, so changing the
+  address or picking a model and pressing Check re-tested the old values and looked broken. It now
+  probes the address and model currently typed, without saving, and its tooltip says so.
+- **The status line no longer lies.** It printed whichever model happened to be selected, so it
+  could claim "connected" for a model that was never checked. It now names the model that was
+  actually probed, and distinguishes "server up, model not downloaded" from "server unreachable".
+- **"Open page" opens a browser.** It called `java.awt.Desktop`, which does nothing in a game JVM
+  (the AWT toolkit is not initialised), so the button appeared dead. It now uses Minecraft's own
+  opener with the platform command as a fallback, and logs the outcome.
+- **The status text no longer overlaps the progress bar**, and is indented to line up with the
+  buttons instead of starting a few pixels to their left.
+- **Language names were mojibake.** Several of them had been through a CP1251 round trip and
+  rendered as Latin-1 garbage instead of `Español`, `Français` or `Türkçe`. All nine names are
+  correct again, and the same corruption in the Russian and Portuguese setting labels was repaired.
+- **Unknown progress no longer looks frozen.** Some Ollama steps ("removing unused layers") report
+  no total, so the bar sat at 0%. It now sweeps, and the caption gets animated dots.
 
 - Rebuilding the runtime after a settings change used to recreate the profile cache and the dialogue
   history, which renamed every villager and forgot the current conversation. They now survive a
   settings change and are only created on a cold start.
+
+- **The mod page link pointed at a project that does not exist.** The metadata and the chat hint
+  used `modrinth.com/mod/justaivillagers`; the published project is `just-ai-villagers`, so the link
+  404'd for anyone who clicked it.
+- **The README contradicted the licence.** It said "all rights reserved" while `LICENSE` and
+  `fabric.mod.json` say MIT.
+
+- **A scared villager names the monster that is actually there.** The flee prompt was built with no
+  mob name and the model filled the gap with whatever it liked, so a villager standing next to a
+  zombie kept shouting about a skeleton. The closest hostile mob's translated name now goes into
+  the prompt and into the canned fallback lines.
+- **A dead villager stops talking.** An evening conversation between two villagers carried on after
+  one of them was killed, with the dead one still taking turns. The exchange now checks that both
+  speakers are alive before every line.
+- **A fatal hit is not answered.** The reaction was queued from the attack callback, which runs
+  before damage is applied, so a killing blow still produced a line from a villager who was already
+  dead. Hits are held for one tick and dropped if the villager did not survive.
+- **Switching the game language renames the villagers.** Profiles were cached by UUID only, so the
+  name and character stayed in the old language for the rest of the session.
+
+- **Picking a model fills the name field.** Selecting a catalogue model left the old name in the
+  editable field, because a rebuild deliberately preserves whatever was typed; the picker now
+  writes the chosen id in as well.
+- **The Cancel button appears the moment a download starts.** It was only added on the next
+  rebuild, which happened on the next unrelated click, so an unwanted download looked
+  uncontrollable.
+- **The repeat reminder names the other real cause.** It said Ollama was not running; a wrong
+  server address produces the same silence, and it now says so.
 
 ## 1.1.5 - villagers know their trade
 
