@@ -71,8 +71,8 @@
 
 ## 1.2.0 - a settings screen, and Ollama without a terminal
 
-This is the Minecraft 1.20.1 build of the same release: the feature set is identical to the
-1.21.11 and 1.21.1 jars, compiled for Java 17 as 1.20.1 expects.
+This is the Minecraft 1.21.1 build of the same release: the feature set is identical to the
+1.21.11 and 1.20.1 jars, compiled for Java 21 as 1.21.1 expects.
 
 
 ### Fixed
